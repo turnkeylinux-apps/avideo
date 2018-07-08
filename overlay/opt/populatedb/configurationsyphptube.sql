@@ -1,0 +1,4 @@
+SET NAMES utf8mb4;
+
+INSERT INTO `configurations` (`id`, `video_resolution`, `users_id`, `version`, `webSiteTitle`, `language`, `contactEmail`, `modified`, `created`, `authGoogle_id`, `authGoogle_key`, `authGoogle_enabled`, `authFacebook_id`, `authFacebook_key`, `authFacebook_enabled`, `authCanUploadVideos`, `authCanViewChart`, `authCanComment`, `head`, `logo`, `logo_small`, `adsense`, `mode`, `disable_analytics`, `disable_youtubeupload`, `allow_download`, `session_timeout`, `autoplay`, `theme`, `smtp`, `smtpAuth`, `smtpSecure`, `smtpHost`, `smtpUsername`, `smtpPassword`, `smtpPort`, `encoderURL`) VALUES
+(1,	'858:480',	1,	'5.8',	'TurnKey Linux YouPHPTube',	'en',	'admin@turnkeylinux.org',	'2018-07-06 00:38:09',	'2018-07-06 00:38:09',	NULL,	NULL,	0,	NULL,	NULL,	0,	0,	0,	1,	NULL,	NULL,	NULL,	NULL,	'Youtube',	0,	0,	0,	3600,	NULL,	'default',	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	'https://encoder.youphptube.com/');

@@ -1,0 +1,14 @@
+#!/bin/bash -e
+# regenerate YouPHPTube secrets and tubeuser mysql password
+
+. /etc/default/inithooks
+
+CONF=/var/www/youphptube/videos/configuration.php
+
+USER=tubeuser
+PASSWORD=$(mcookie)
+SECRET=$(mcookie)$(mcookie)
+
+sed -i "s|\$mysqlPass.*|\$mysqlPass = \'$PASSWORD\'\;|g" $CONF;
+
+$INITHOOKS_PATH/bin/mysqlconf.py --user="$USER" --pass="$PASSWORD"

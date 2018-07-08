@@ -1,0 +1,8 @@
+#!/bin/bash -e
+# set youphptube url
+
+. /etc/default/inithooks
+
+[ -e $INITHOOKS_CONF ] && . $INITHOOKS_CONF
+$INITHOOKS_PATH/bin/seturl.py
+
