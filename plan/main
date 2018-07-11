@@ -23,6 +23,7 @@ libpcre3
 libpcre3-dev 
 libssl-dev
 daemon
+nginx
 
 unzip              
 zlib1g-dev

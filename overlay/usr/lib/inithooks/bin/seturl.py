@@ -77,11 +77,11 @@ def main():
     """Replace URL In YouPHPTube Config File"""
     system('sed', '-i', "s/.*webSiteRootURL.*/\$global\[\'webSiteRootURL\'\] = \'%s\'\;/g" % eurlfrontend, '/var/www/youphptube/videos/configuration.php')
     """Replace URL In Nginx Config File"""
-    system('sed', '-i', "s/.*on_publish.*/                            on_publish %s/g" % estreamingurl1, '/usr/local/nginx/conf/nginx.conf')
+    system('sed', '-i', "s/.*on_publish.*/                            on_publish %s/g" % estreamingurl1, '/etc/nginx/nginx.conf')
     """Replace URL In Nginx Config File"""
-    system('sed', '-i', "s/.*on_play.*/                            on_play %s/g" % estreamingurl2, '/usr/local/nginx/conf/nginx.conf')
+    system('sed', '-i', "s/.*on_play.*/                            on_play %s/g" % estreamingurl2, '/etc/nginx/nginx.conf')
     """Replace URL In Nginx Config File"""
-    system('sed', '-i', "s/.*on_record.*/                            on_record_done %s/g" % estreamingurl3, '/usr/local/nginx/conf/nginx.conf')
+    system('sed', '-i', "s/.*on_record.*/                            on_record_done %s/g" % estreamingurl3, '/etc/nginx/nginx.conf')
     """Restart Apache"""
     system('systemctl', 'restart', 'apache2.service')
 

@@ -36,28 +36,42 @@ mv /opt/youphptube/configuration.php $WEBROOT/videos/configuration.php
 chown -R www-data:www-data $WEBROOT
 
 # setup nginx for live streaming
-mkdir /opt/build
-cd /opt/build
-git clone git://github.com/arut/nginx-rtmp-module.git
-wget http://nginx.org/download/nginx-1.14.0.tar.gz
-tar xzf nginx-1.14.0.tar.gz
-cd nginx-1.14.0
-./configure --with-http_ssl_module --with-http_stub_status_module --add-module=../nginx-rtmp-module 
-make
-make install
-mkdir /usr/local/nginx/ssl/
-mkdir /HLS 
-mkdir /HLS/live
-cp /opt/build/nginx-rtmp-module/stat.xsl /usr/local/nginx/html
-mv /usr/local/nginx/conf/nginx.conf /usr/local/nginx/conf/nginx.conf.old
-cd /usr/local/nginx/conf/
+#mkdir /opt/build
+#cd /opt/build
+#git clone git://github.com/arut/nginx-rtmp-module.git
+#wget http://nginx.org/download/nginx-1.14.0.tar.gz
+#tar xzf nginx-1.14.0.tar.gz
+#cd nginx-1.14.0
+#./configure --with-http_ssl_module --with-http_stub_status_module --add-module=../nginx-rtmp-module 
+#make
+#make install
+#mkdir /usr/local/nginx/ssl/
+#mkdir /HLS 
+#mkdir /HLS/live
+#cp /opt/build/nginx-rtmp-module/stat.xsl /usr/local/nginx/html
+#mv /usr/local/nginx/conf/nginx.conf /usr/local/nginx/conf/nginx.conf.old
+#cd /usr/local/nginx/conf/
+#wget https://raw.githubusercontent.com/DanielnetoDotCom/YouPHPTube/master/plugin/Live/install/nginx.conf
+
+touch /etc/apt/sources.list.d/backports.list
+echo "deb http://ftp.debian.org/debian stretch-backports main" > /etc/apt/sources.list.d/backports.list
+apt-get update
+apt-get -t stretch-backports install libnginx-mod-rtmp
+cd /etc/nginx
+rm -rf /etc/nginx/nginx.conf
 wget https://raw.githubusercontent.com/DanielnetoDotCom/YouPHPTube/master/plugin/Live/install/nginx.conf
 
 #Edit Nginx Config To Listen on 444
-sed -i "/listen 8080/ a \\\t            listen 444 ssl\;" /usr/local/nginx/conf/nginx.conf
-sed -i "/listen 444/ a \\\t            ssl_certificate \/etc\/ssl\/certs\/ssl-cert-snakeoil\.pem;" /usr/local/nginx/conf/nginx.conf
-sed -i "/listen 444/ a \\\t            ssl_certificate_key \/etc\/ssl\/private\/ssl-cert-snakeoil.key\;" /usr/local/nginx/conf/nginx.conf
-sed -i "/listen 444/ a \\\t            ssl_certificate_key \/etc\/ssl\/private\/ssl-cert-snakeoil.key\;" /usr/local/nginx/conf/nginx.conf
+#sed -i "/listen 8080/ a \\\t            listen 444 ssl\;" /usr/local/nginx/conf/nginx.conf
+#sed -i "/listen 444/ a \\\t            ssl_certificate \/etc\/ssl\/certs\/ssl-cert-snakeoil\.pem;" /usr/local/nginx/conf/nginx.conf
+#sed -i "/listen 444/ a \\\t            ssl_certificate_key \/etc\/ssl\/private\/ssl-cert-snakeoil.key\;" /usr/local/nginx/conf/nginx.conf
+#sed -i "/listen 444/ a \\\t            ssl_certificate_key \/etc\/ssl\/private\/ssl-cert-snakeoil.key\;" /usr/local/nginx/conf/nginx.conf
+
+#Edit Nginx Config To Listen on 444
+sed -i "/listen 8080/ a \\\t            listen 444 ssl\;" /etc/nginx/nginx.conf
+sed -i "/listen 444/ a \\\t            ssl_certificate \/etc\/ssl\/certs\/ssl-cert-snakeoil\.pem;" /etc/nginx/nginx.conf
+sed -i "/listen 444/ a \\\t            ssl_certificate_key \/etc\/ssl\/private\/ssl-cert-snakeoil.key\;" /etc/nginx/nginx.conf
+sed -i "/listen 444/ a \\\t            ssl_certificate_key \/etc\/ssl\/private\/ssl-cert-snakeoil.key\;" /etc/nginx/nginx.conf
 
 #Enable SSL Chat
 cat > /etc/apache2/mods-available/proxy.conf << EOF
