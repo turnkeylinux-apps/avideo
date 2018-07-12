@@ -76,8 +76,6 @@ def main():
     system('sed', '-i', "s/.*salt.*/\$global\[\'salt\'\] = \'%s\'\;/g" % salty, '/var/www/youphptube/videos/configuration.php')
     """Replace URL In YouPHPTube Config File"""
     system('sed', '-i', "s/.*webSiteRootURL.*/\$global\[\'webSiteRootURL\'\] = \'%s\'\;/g" % eurlfrontend, '/var/www/youphptube/videos/configuration.php')
-    """Replace URL In Nginx Config File"""
-    system('sed', '-i', "s/.*on_record.*/                            on_record_done %s/g" % estreamingurl3, '/etc/nginx/nginx.conf')
     """Restart Apache"""
     system('systemctl', 'restart', 'apache2.service')
     """Restart nginx"""
