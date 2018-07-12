@@ -84,6 +84,9 @@ def main():
     system('sed', '-i', "s/.*on_record.*/                            on_record_done %s/g" % estreamingurl3, '/etc/nginx/nginx.conf')
     """Restart Apache"""
     system('systemctl', 'restart', 'apache2.service')
+    """Restart nginx"""
+    system('systemctl', 'restart', 'nginx.service')
+
 
 if __name__ == "__main__":
     main()
