@@ -27,6 +27,7 @@ mkdir $WEBROOT/videos
 curl -L https://yt-dl.org/downloads/latest/youtube-dl -o /usr/local/bin/youtube-dl && chmod a+rx /usr/local/bin/youtube-dl
 
 #Modify Database Generation Script For MariaDB Compatibility
+#https://github.com/DanielnetoDotCom/YouPHPTube/issues/171
 sed -i "61s|255|191|" $WEBROOT/install/database.sql
 
 #Move Config Files Into Place
