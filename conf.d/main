@@ -1,6 +1,7 @@
 #!/bin/bash -ex
 
 WEBROOT=/var/www/youphptube
+SRC=/usr/local/src
 
 service apache2 start
 
@@ -31,17 +32,15 @@ curl -L https://yt-dl.org/downloads/latest/youtube-dl -o /usr/local/bin/youtube-
 sed -i "61s|255|191|" $WEBROOT/install/database.sql
 
 #Move Config Files Into Place
-mv /opt/youphptube/configuration.php $WEBROOT/videos/configuration.php
+mv $SRC/youphptube/configuration.php $WEBROOT/videos/configuration.php
 
 # ensure correct permissions set on web directories
 chown -R www-data:www-data $WEBROOT
 
 # setup nginx for live streaming
-mkdir /opt/build
-cd /opt/build
-git clone git://github.com/arut/nginx-rtmp-module.git
-mkdir /HLS 
-mkdir /HLS/live
+NGINX_RTMP=$SRC/nginx-rtmp-module
+git clone git://github.com/arut/nginx-rtmp-module.git $NGINX_RTMP
+mkdir -p $NGINX_RTMP/HLS/live
 
 touch /etc/apt/sources.list.d/backports.list
 echo "deb http://ftp.debian.org/debian stretch-backports main" > /etc/apt/sources.list.d/backports.list
@@ -49,7 +48,7 @@ apt-get -y update
 apt-get -y -t stretch-backports install libnginx-mod-rtmp
 
 #Enable RTMP stats
-mv /opt/build/nginx-rtmp-module/stat.xsl /var/www/html
+mv $NGINX_RTMP/stat.xsl /var/www/html
 
 #Enable SSL Chat
 cat > /etc/apache2/mods-available/proxy.conf << EOF
@@ -59,7 +58,7 @@ cat > /etc/apache2/mods-available/proxy.conf << EOF
 EOF
 
 #Copy nginx conf into place
-mv /opt/nginx/nginx.conf /etc/nginx/nginx.conf
+mv $SRC/nginx/nginx.conf /etc/nginx/nginx.conf
 
 #Start MySQL
 service mysql start
@@ -75,9 +74,9 @@ $MYSQL_ADMIN create yphptube;
 
 # Populate database
 $MYSQL_BATCHDB < $WEBROOT/install/database.sql
-$MYSQL_BATCHDB < /opt/populatedb/usersyphptube.sql
-$MYSQL_BATCHDB < /opt/populatedb/configurationsyphptube.sql
-$MYSQL_BATCHDB < /opt/populatedb/categoriesyphptube.sql
+$MYSQL_BATCHDB < $SRC/populatedb/usersyphptube.sql
+$MYSQL_BATCHDB < $SRC/populatedb/configurationsyphptube.sql
+$MYSQL_BATCHDB < $SRC/populatedb/categoriesyphptube.sql
 
 #tubepass is changed at firstboot non-interactively (Secure At First Boot)
 $MYSQL_BATCH -e "grant all on yphptube.* to 'tubeuser'@localhost identified by 'tubepass';"
@@ -94,10 +93,10 @@ a2ensite youphptube
 /etc/init.d/mysql stop
 
 # Purge Temp Files
-rm -rf /opt/build
-rm -rf /opt/populatedb
-rm -rf /opt/youphptube
-rm -rf /opt/nginx
+rm -rf $SRC/build
+rm -rf $SRC/populatedb
+rm -rf $SRC/youphptube
+rm -rf $SRC/nginx
 
 # Remove Enabled nginx sites
 rm /etc/nginx/sites-enabled/default
