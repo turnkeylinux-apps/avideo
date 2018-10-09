@@ -26,7 +26,7 @@ a2enmod proxy_wstunnel
 a2enmod rewrite
 
 # clone repo and create required dirs
-git clone https://github.com/DanielnetoDotCom/YouPHPTube.git $WEBROOT
+git clone --depth=1 https://github.com/DanielnetoDotCom/YouPHPTube.git $WEBROOT
 mkdir $WEBROOT/videos
 
 # Move Config File Into Place
