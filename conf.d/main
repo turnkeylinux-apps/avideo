@@ -27,6 +27,7 @@ mkdir $WEBROOT/videos
 curl -L https://yt-dl.org/downloads/latest/youtube-dl -o /usr/local/bin/youtube-dl && chmod a+rx /usr/local/bin/youtube-dl
 
 #Modify Database Generation Script For MariaDB Compatibility
+#https://github.com/DanielnetoDotCom/YouPHPTube/issues/171
 sed -i "61s|255|191|" $WEBROOT/install/database.sql
 
 #Move Config Files Into Place
@@ -39,25 +40,16 @@ chown -R www-data:www-data $WEBROOT
 mkdir /opt/build
 cd /opt/build
 git clone git://github.com/arut/nginx-rtmp-module.git
-wget http://nginx.org/download/nginx-1.14.0.tar.gz
-tar xzf nginx-1.14.0.tar.gz
-cd nginx-1.14.0
-./configure --with-http_ssl_module --with-http_stub_status_module --add-module=../nginx-rtmp-module 
-make
-make install
-mkdir /usr/local/nginx/ssl/
 mkdir /HLS 
 mkdir /HLS/live
-cp /opt/build/nginx-rtmp-module/stat.xsl /usr/local/nginx/html
-mv /usr/local/nginx/conf/nginx.conf /usr/local/nginx/conf/nginx.conf.old
-cd /usr/local/nginx/conf/
-wget https://raw.githubusercontent.com/DanielnetoDotCom/YouPHPTube/master/plugin/Live/install/nginx.conf
 
-#Edit Nginx Config To Listen on 444
-sed -i "/listen 8080/ a \\\t            listen 444 ssl\;" /usr/local/nginx/conf/nginx.conf
-sed -i "/listen 444/ a \\\t            ssl_certificate \/etc\/ssl\/certs\/ssl-cert-snakeoil\.pem;" /usr/local/nginx/conf/nginx.conf
-sed -i "/listen 444/ a \\\t            ssl_certificate_key \/etc\/ssl\/private\/ssl-cert-snakeoil.key\;" /usr/local/nginx/conf/nginx.conf
-sed -i "/listen 444/ a \\\t            ssl_certificate_key \/etc\/ssl\/private\/ssl-cert-snakeoil.key\;" /usr/local/nginx/conf/nginx.conf
+touch /etc/apt/sources.list.d/backports.list
+echo "deb http://ftp.debian.org/debian stretch-backports main" > /etc/apt/sources.list.d/backports.list
+apt-get -y update
+apt-get -y -t stretch-backports install libnginx-mod-rtmp
+
+#Enable RTMP stats
+mv /opt/build/nginx-rtmp-module/stat.xsl /var/www/html
 
 #Enable SSL Chat
 cat > /etc/apache2/mods-available/proxy.conf << EOF
@@ -65,6 +57,9 @@ cat > /etc/apache2/mods-available/proxy.conf << EOF
         ProxyPass /wss/ ws://127.0.0.1:8888/
 </IfModule>
 EOF
+
+#Copy nginx conf into place
+mv /opt/nginx/nginx.conf /etc/nginx/nginx.conf
 
 #Start MySQL
 service mysql start
@@ -98,6 +93,11 @@ a2ensite youphptube
 # stop mysql server
 /etc/init.d/mysql stop
 
+# Purge Temp Files
 rm -rf /opt/build
 rm -rf /opt/populatedb
 rm -rf /opt/youphptube
+rm -rf /opt/nginx
+
+# Remove Enabled nginx sites
+rm /etc/nginx/sites-enabled/default

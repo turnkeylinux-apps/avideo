@@ -4,5 +4,4 @@
 . /etc/default/inithooks
 
 [ -e $INITHOOKS_CONF ] && . $INITHOOKS_CONF
-$INITHOOKS_PATH/bin/seturl.py
-
+$INITHOOKS_PATH/bin/youphptube-domain.py  --domain="$APP_DOMAIN"

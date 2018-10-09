@@ -1,5 +1,5 @@
 #!/usr/bin/python
-"""Set YouPHPTube admin password and email
+"""Set YouPHPTube Domain
 Option:
     --pass=     unless provided, will ask interactively
     --email=    unless provided, will ask interactively
@@ -26,28 +26,28 @@ def usage(s=None):
 def main():
     try:
         opts, args = getopt.gnu_getopt(sys.argv[1:], "h",
-                                       ['help', 'url='])
+                                       ['help', 'domain='])
     except getopt.GetoptError, e:
         usage(e)
 
-    url = ""
+    domain = ""
     for opt, val in opts:
         if opt in ('-h', '--help'):
             usage()
-        elif opt == '--url':
-            url = val
+        elif opt == '--domain':
+            domain = val
 
 
 
-    if not url:
+    if not domain:
         if 'd' not in locals():
             d = Dialog('TurnKey Linux - First boot configuration')
 
-        url = d.inputbox(
-            "YouPHPTube URL",
-            "Please enter the URL address for YouPHPTube.",
+        domain = d.inputbox(
+            "YouPHPTube Domain",
+            "Please enter the Domain or IP address for YouPHPTube.",
             "example.com")
-    url = url[1]
+    domain = domain[1]
 
     ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyz"
     chars=[]
@@ -63,27 +63,18 @@ def main():
     m = MySQL()
     m.execute('UPDATE yphptube.users SET channelName=\"%s\" WHERE user=\"admin\";' % key)
 
-    urlfrontend = 'https://' + url + '/'
+    urlfrontend = 'https://' + domain + '/'
     eurlfrontend = re.escape(urlfrontend)
-    streamingurl1 = 'http://' + url + '/plugin/Live/on_publish.php;'
-    estreamingurl1 = re.escape(streamingurl1)
-    streamingurl2 = 'http://' + url + '/plugin/Live/on_play.php;'
-    estreamingurl2 = re.escape(streamingurl2)
-    streamingurl3 = 'http://' + url + '/plugin/Live/on_record_done.php;'
-    estreamingurl3 = re.escape(streamingurl3)
 
     """Replace Salt In YouPHPTube Config File"""
     system('sed', '-i', "s/.*salt.*/\$global\[\'salt\'\] = \'%s\'\;/g" % salty, '/var/www/youphptube/videos/configuration.php')
     """Replace URL In YouPHPTube Config File"""
     system('sed', '-i', "s/.*webSiteRootURL.*/\$global\[\'webSiteRootURL\'\] = \'%s\'\;/g" % eurlfrontend, '/var/www/youphptube/videos/configuration.php')
-    """Replace URL In Nginx Config File"""
-    system('sed', '-i', "s/.*on_publish.*/                            on_publish %s/g" % estreamingurl1, '/usr/local/nginx/conf/nginx.conf')
-    """Replace URL In Nginx Config File"""
-    system('sed', '-i', "s/.*on_play.*/                            on_play %s/g" % estreamingurl2, '/usr/local/nginx/conf/nginx.conf')
-    """Replace URL In Nginx Config File"""
-    system('sed', '-i', "s/.*on_record.*/                            on_record_done %s/g" % estreamingurl3, '/usr/local/nginx/conf/nginx.conf')
     """Restart Apache"""
     system('systemctl', 'restart', 'apache2.service')
+    """Restart nginx"""
+    system('systemctl', 'restart', 'nginx.service')
+
 
 if __name__ == "__main__":
     main()
