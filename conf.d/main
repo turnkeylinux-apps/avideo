@@ -37,18 +37,14 @@ mv $SRC/youphptube/configuration.php $WEBROOT/videos/configuration.php
 # ensure correct permissions set on web directories
 chown -R www-data:www-data $WEBROOT
 
-# setup nginx for live streaming
-NGINX_RTMP=$SRC/nginx-rtmp-module
-git clone git://github.com/arut/nginx-rtmp-module.git $NGINX_RTMP
-mkdir -p $NGINX_RTMP/HLS/live
-
 touch /etc/apt/sources.list.d/backports.list
 echo "deb http://ftp.debian.org/debian stretch-backports main" > /etc/apt/sources.list.d/backports.list
 apt-get -y update
 apt-get -y -t stretch-backports install libnginx-mod-rtmp
 
 #Enable RTMP stats
-mv $NGINX_RTMP/stat.xsl /var/www/html
+URL=https://raw.githubusercontent.com/arut/nginx-rtmp-module/master
+wget $URL/stat.xsl -O /var/www/html/stat.xsl
 
 #Enable SSL Chat
 cat > /etc/apache2/mods-available/proxy.conf << EOF
