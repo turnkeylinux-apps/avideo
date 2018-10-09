@@ -3,6 +3,8 @@
 Option:
     --pass=     unless provided, will ask interactively
     --email=    unless provided, will ask interactively
+    --domain=   unless provided, will ask interactively
+                default: www.example.com
 """
 
 import sys
@@ -15,6 +17,8 @@ import random
 from executil import system
 from dialog_wrapper import Dialog
 from mysqlconf import MySQL
+
+DEFAULT_DOMAIN = "www.example.com"
 
 def usage(s=None):
     if s:
@@ -46,7 +50,7 @@ def main():
         domain = d.inputbox(
             "YouPHPTube Domain",
             "Please enter the Domain or IP address for YouPHPTube.",
-            "example.com")
+            DEFAULT_DOMAIN)
     domain = domain[1]
 
     ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyz"
