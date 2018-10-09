@@ -11,7 +11,8 @@ sed -i "s|^post_max_size.*|post_max_size = 1000M|" $PHPINI
 sed -i "s|^allow_url_fopen.*|allow_url_fopen = On|" $PHPINI
 sed -i "s|^max_execution.*|max_execution_time = 21600|" $PHPINI
 
-# Apache - enable SSL Chat
+# enable chat (via Apache TLS)
+systemctl enable youphptube-streamchat.service
 cat > /etc/apache2/mods-available/proxy.conf << EOF
 <IfModule mod_proxy.c>
         ProxyPass /wss/ ws://127.0.0.1:8888/
