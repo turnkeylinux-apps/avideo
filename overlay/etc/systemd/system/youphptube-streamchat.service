@@ -1,0 +1,14 @@
+[Unit]
+Description=YouPHPTube Streaming and Chat service
+After=network.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+User=www-data
+ExecStart=/usr/bin/php /var/www/youphptube/plugin/LiveChat/chat-server.php
+
+[Install]
+WantedBy=multi-user.target
