@@ -48,6 +48,9 @@ mv $SRC/nginx.conf /etc/nginx/nginx.conf
 rm /etc/nginx/sites-enabled/default
 URL=https://raw.githubusercontent.com/arut/nginx-rtmp-module/master
 wget $URL/stat.xsl -O /var/www/html/stat.xsl
+# Create Directories necessary for live stream
+mkdir /HLS
+mkdir /HLS/live
 
 ##---------------YouPHPTube-----------------##
 
