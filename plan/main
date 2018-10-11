@@ -17,5 +17,6 @@ php-gettext
 tinymce
 libpcre3
 daemon
+nginx
 
 unzip
