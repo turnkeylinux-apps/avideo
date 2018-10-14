@@ -2,6 +2,6 @@ turnkey-youphptube-15.0 (1) turnkey; urgency=low
 
   * Initial appliance release based on lamp appliance
 
-  * Includes v1.0 of youphptube, installed from github repo
+  * Includes v6.1 of youphptube, installed from github repo
 
- -- Miles McQuiston <ptm@tapbop.com>  Mon, 05 Jul 2018 14:56:00 +0000
+ -- Miles McQuiston <ptm@tapbop.com>  Mon, 14 Oct 2018 23:56:00 +0000
