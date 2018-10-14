@@ -1,29 +1,22 @@
 #include <turnkey/base>
 #include <turnkey/lamp>
 
-php 
-libapache2-mod-php 
-php-mysql 
-php-curl 
-php-gd 
-php-intl 
+php-curl
+php-gd
+php-intl
+php-xml
 ffmpeg
-git 
 libimage-exiftool-perl
-libjs-cropper       
-libjs-jquery        
-libjs-prototype     
-libjs-scriptaculous 
-libphp-phpmailer   
-libphp-snoopy      
-php-gettext                  
-tinymce            
-build-essential 
-libpcre3 
-libpcre3-dev 
-libssl-dev
+libjs-cropper
+libjs-jquery
+libjs-prototype
+libjs-scriptaculous
+libphp-phpmailer
+libphp-snoopy
+php-gettext
+tinymce
+libpcre3
 daemon
 nginx
 
-unzip              
-zlib1g-dev
+unzip
