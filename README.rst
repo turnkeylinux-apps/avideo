@@ -1,5 +1,5 @@
-YouPHPTube- Your own Tube website
-=================================
+YouPHPTube - Your own Tube website
+==================================
 
 YouPHPTube_ (YPT) is an open source solution that is freely available
 to everyone. The idea came from the need to disseminate videos with
