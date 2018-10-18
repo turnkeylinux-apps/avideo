@@ -98,10 +98,10 @@ def main():
     m.execute('UPDATE encoder.streamers SET siteURL=\"%s\" WHERE id=2;' % urlfrontend)
 
     """Configure YouPHPTube To Use Local Encoder"""
-     m.execute('UPDATE yphptube.configurations SET encoderURL=\"%s\" WHERE id=1;' % urlencoder)
+    m.execute('UPDATE yphptube.configurations SET encoderURL=\"%s\" WHERE id=1;' % urlencoder)
 
     """Lock Down Encoder To Specified Streamer Domain"""
-     m.execute('UPDATE encoder.configurations SET allowedStreamersURL=\"%s\" WHERE id=1;' % urlfrontend)
+    m.execute('UPDATE encoder.configurations SET allowedStreamersURL=\"%s\" WHERE id=1;' % urlfrontend)
 
     """Replace URL In YouPHPTube Config File"""
     system('sed', '-i', "s/.*webSiteRootURL.*/\$global\[\'webSiteRootURL\'\] = \'%s\'\;/g" % urlfrontend,
