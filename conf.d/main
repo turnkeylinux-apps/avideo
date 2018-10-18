@@ -1,6 +1,7 @@
 #!/bin/bash -ex
 
 WEBROOT=/var/www/youphptube
+ENCROOT=/var/www/YouPHPTube-Encoder
 SRC=/usr/local/src
 
 # modify php configuration for YouPHPTube requirements
@@ -29,11 +30,17 @@ a2enmod rewrite
 git clone --depth=1 https://github.com/DanielnetoDotCom/YouPHPTube.git $WEBROOT
 mkdir $WEBROOT/videos
 
+# clone encoder repo and create required dirs
+git clone --depth=1 https://github.com/DanielnetoDotCom/YouPHPTube-Encoder
+mkdir $ENCROOT/videos
+
 # Move Config File Into Place
 mv $SRC/youphptube_configuration.php $WEBROOT/videos/configuration.php
+mv $SRC/youphptubeencoder_configuration.php $ENCROOT/videos/configuration.php
 
 # ensure correct permissions set on web directories
 chown -R www-data:www-data $WEBROOT
+chown -R www-data:www-data $ENCROOT
 
 # enable remote video download
 curl -L https://yt-dl.org/downloads/latest/youtube-dl -o /usr/local/bin/youtube-dl
@@ -61,21 +68,34 @@ MYSQL_BATCH="mysql --user=root --password=$MYSQL_PASS --batch"
 MYSQL_BATCHDB="mysql --user=root --password=$MYSQL_PASS --database=yphptube --batch"
 MYSQL_ADMIN="mysqladmin --user=root --password=$MYSQL_PASS"
 
-#Create Database
-$MYSQL_ADMIN create yphptube; 
+# Execute YouPHPTubeEncoder Create Database and Run Database Structure Script
+MYSQL_BATCH="mysql --user=root --password=$MYSQL_PASS --batch"
+MYSQL_BATCHDB2="mysql --user=root --password=$MYSQL_PASS --database=encoder --batch"
+MYSQL_ADMIN="mysqladmin --user=root --password=$MYSQL_PASS"
+
+#Create Databases
+$MYSQL_ADMIN create yphptube;
+$MYSQL_ADMIN create encoder;
+
 
 # Modify Database Generation Script For MariaDB Compatibility
 # https://github.com/DanielnetoDotCom/YouPHPTube/issues/171
 sed -i "61s|255|191|" $WEBROOT/install/database.sql
 
-# Populate database
+# Populate YouPHPTube database
 $MYSQL_BATCHDB < $WEBROOT/install/database.sql
 $MYSQL_BATCHDB < $SRC/populatedb/usersyphptube.sql
 $MYSQL_BATCHDB < $SRC/populatedb/configurationsyphptube.sql
 $MYSQL_BATCHDB < $SRC/populatedb/categoriesyphptube.sql
 
+# Populate YouPHPTubeEncoder database
+$MYSQL_BATCHDB2 < $ENCROOT/install/database.sql
+$MYSQL_BATCHDB2 < $SRC/populatedb/configurationsyphptubeencoder.sql
+$MYSQL_BATCHDB2 < $SRC/populatedb/streamersyphptubeencoder.sql
+
 # tubepass is changed at firstboot non-interactively (Secure At First Boot)
 $MYSQL_BATCH -e "grant all on yphptube.* to 'tubeuser'@localhost identified by 'tubepass';"
+$MYSQL_BATCH -e "grant all on encoder.* to 'tubeuser'@localhost identified by 'tubepass';"
 
 service mysql stop
 
