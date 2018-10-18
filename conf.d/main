@@ -23,6 +23,7 @@ EOF
 # more Apache conf
 a2dissite 000-default
 a2ensite youphptube
+a2ensite encoder
 a2enmod proxy_wstunnel
 a2enmod rewrite
 
@@ -31,7 +32,7 @@ git clone --depth=1 https://github.com/DanielnetoDotCom/YouPHPTube.git $WEBROOT
 mkdir $WEBROOT/videos
 
 # clone encoder repo and create required dirs
-git clone --depth=1 https://github.com/DanielnetoDotCom/YouPHPTube-Encoder
+git clone --depth=1 https://github.com/DanielnetoDotCom/YouPHPTube-Encoder $ENCROOT
 mkdir $ENCROOT/videos
 
 # Move Config File Into Place
