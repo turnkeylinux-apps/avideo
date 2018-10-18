@@ -77,8 +77,8 @@ def main():
 
     inithooks_cache.write('APP_DOMAIN', domain)
 
-    apache_conf = "/etc/apache2/sites-available/youphptube.conf"
-    system("sed -i \"0,\|RewriteRule|! {\|RewriteRule|s|https://.*|https://%s/\$1 [R,L]|}\" %s" % (domain, apache_conf))
+    """apache_conf = "/etc/apache2/sites-available/youphptube.conf"
+    system("sed -i \"0,\|RewriteRule|! {\|RewriteRule|s|https://.*|https://%s/\$1 [R,L]|}\" %s" % (domain, apache_conf))"""
     hashpass = hashlib.md5(password).hexdigest()
 
     m = MySQL()
