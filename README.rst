@@ -1,5 +1,5 @@
-YouPHPTube- Your own Tube website
-=================================
+YouPHPTube - Your own Tube website
+==================================
 
 YouPHPTube_ (YPT) is an open source solution that is freely available
 to everyone. The idea came from the need to disseminate videos with
@@ -17,6 +17,9 @@ that allows you to directly view and stream videos of your phone.
 This appliance includes all the standard features in `TurnKey Core`_,
 and on top of that:
 
+- YouPHPTube installed from upstream source to /var/www/youphptube.
+- YouPHPTube configured to support encoding - listening on ports 81 (http)
+  and 445 (https).
 - SSL support out of the box.
 - `Adminer`_ administration frontend for MySQL (listening on port
   12322 - uses SSL).

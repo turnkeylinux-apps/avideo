@@ -1,3 +1,13 @@
+turnkey-youphptube-15.1 (1) turnkey; urgency=low
+
+  * Fix Apache redirect to domain (now supports setting APP_DOMAIN to IP
+    address). Part of #1230.
+
+  * Include encoding support.
+    [ https://github.com/MPTMG ]
+
+ -- Jeremy Davis <jeremy@turnkeylinux.org>  Mon, 29 Oct 2018 13:53:13 +1100
+
 turnkey-youphptube-15.0 (1) turnkey; urgency=low
 
   * Initial appliance release based on lamp appliance
