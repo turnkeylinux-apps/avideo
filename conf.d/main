@@ -27,6 +27,11 @@ a2ensite encoder
 a2enmod proxy_wstunnel
 a2enmod rewrite
 
+# add encoder ports (http 81 & https 445) to apache ports.conf
+ports_conf=/etc/apache2/ports.conf
+sed -i "\|Listen 80|a Listen 81" $ports_conf
+sed -i "\|Listen 443|a \\\tListen 445" $ports_conf
+
 # clone repo and create required dirs
 git clone --depth=1 https://github.com/DanielnetoDotCom/YouPHPTube.git $WEBROOT
 mkdir $WEBROOT/videos
