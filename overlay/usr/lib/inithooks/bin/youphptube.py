@@ -86,11 +86,30 @@ def main():
     m.execute('UPDATE yphptube.users SET email=\"%s\" WHERE user=\"admin\";' % email)
     m.execute('UPDATE yphptube.users SET password=\"%s\" WHERE user=\"admin\";' % hashpass)
 
+    """Set password details in youPHPTube-Encoder Database (Clear and Encrypted)"""
+    m.execute('UPDATE encoder.streamers SET pass=\"%s\" WHERE id=1;' % password)
+    m.execute('UPDATE encoder.streamers SET pass=\"%s\" WHERE id=2;' % hashpass)
+
     urlfrontend = re.escape('https://' + domain + '/')
+    urlencoder = re.escape('https://' + domain + ':445/')
+
+    """Set Streamer Site Configuration in Encoder"""
+    m.execute('UPDATE encoder.streamers SET siteURL=\"%s\" WHERE id=1;' % urlfrontend)
+    m.execute('UPDATE encoder.streamers SET siteURL=\"%s\" WHERE id=2;' % urlfrontend)
+
+    """Configure YouPHPTube To Use Local Encoder"""
+    m.execute('UPDATE yphptube.configurations SET encoderURL=\"%s\" WHERE id=1;' % urlencoder)
+
+    """Lock Down Encoder To Specified Streamer Domain"""
+    m.execute('UPDATE encoder.configurations SET allowedStreamersURL=\"%s\" WHERE id=1;' % urlfrontend)
 
     """Replace URL In YouPHPTube Config File"""
     system('sed', '-i', "s/.*webSiteRootURL.*/\$global\[\'webSiteRootURL\'\] = \'%s\'\;/g" % urlfrontend,
         '/var/www/youphptube/videos/configuration.php')
+    """Replace URL In YouPHPTube Encoder Config File"""
+    system('sed', '-i', "s/.*webSiteRootURL.*/\$global\[\'webSiteRootURL\'\] = \'%s\'\;/g" % urlencoder,
+        '/var/www/YouPHPTube-Encoder/videos/configuration.php')
+
     """Restart Apache"""
     system('systemctl', 'restart', 'apache2.service')
     """Restart nginx"""
