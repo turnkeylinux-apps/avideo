@@ -108,7 +108,7 @@ def main():
         '/var/www/youphptube/videos/configuration.php')
     """Replace URL In YouPHPTube Encoder Config File"""
     system('sed', '-i', "s/.*webSiteRootURL.*/\$global\[\'webSiteRootURL\'\] = \'%s\'\;/g" % urlencoder,
-        '/var/www/YouPHPTube-Encoder/videos/configuration.php')
+        '/var/www/youphptube-encoder/videos/configuration.php')
 
     """Restart Apache"""
     system('systemctl', 'restart', 'apache2.service')
