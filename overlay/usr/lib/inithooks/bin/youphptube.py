@@ -84,7 +84,7 @@ def main():
 
     m = MySQL()
 
-    m.execute('UPDATE youphptube.configurations contactEmail="%s" WHERE users_id="1";' % email)
+    m.execute('UPDATE youphptube.configurations SET contactEmail="%s" WHERE users_id="1";' % email)
     m.execute('UPDATE youphptube.users SET email="%s" WHERE user="admin";' % email)
     m.execute('UPDATE youphptube.users SET password="%s" WHERE user="admin";' % hashpass)
 
@@ -94,31 +94,31 @@ def main():
 
     domain = domain + '/'
     url = 'https://' + domain
-    enc = 'encoder/'
+    enc = url + 'encoder/'
 
     """Set Streamer Site Configuration in Encoder"""
-    m.execute('UPDATE encoder.streamers SET siteURL="%s" WHERE id=1;' % url)
-    m.execute('UPDATE encoder.streamers SET siteURL="%s" WHERE id=2;' % url)
+    m.execute('UPDATE youphptube_encoder.streamers SET siteURL="%s" WHERE id=1;' % url)
+    m.execute('UPDATE youphptube_encoder.streamers SET siteURL="%s" WHERE id=2;' % url)
 
     """Configure YouPHPTube To Use Local Encoder"""
-    m.execute('UPDATE youphptube.configurations SET encoderURL="%s" WHERE id=1;' % url + enc)
+    m.execute('UPDATE youphptube.configurations SET encoderURL="%s" WHERE id=1;' % (enc))
 
     """Lock Down Encoder To Specified Streamer Domain"""
-    m.execute('UPDATE encoder.configurations SET allowedStreamersURL="%s" WHERE id=1;' % url)
+    m.execute('UPDATE youphptube_encoder.configurations SET allowedStreamersURL="%s" WHERE id=1;' % url)
 
     """Replace URL in Config Files"""
     conf_path = '/var/www/{}/videos/configuration.php'
-    for _config, _domain in (
-                    (conf_path.format('youphptube'), domain),
-                    (conf_path.format('youphptube-encoder'), domain + enc)):
+    for _config, _url in (
+                    (conf_path.format('youphptube'), url),
+                    (conf_path.format('youphptube-encoder'), enc)):
         with open(_config, 'r') as fob:
             lines = []
             for line in fob.readlines():
                 if "$global['webSiteRootURL'] = 'http" in line:
                     line = line.split('=')
-                    domain_prt = line[1].split("'")
-                    domain_prt[1] = _domain
-                    line[1] = "'".join(url)
+                    url_prt = line[1].split("'")
+                    url_prt[1] = _url
+                    line[1] = "'".join(url_prt)
                     line = '='.join(line)
                 lines.append(line)
         with open(_config, 'w') as fob:
