@@ -107,6 +107,26 @@ ENC_URL="$LOCAL_ENC/install/checkConfiguration.php"
 curl $YPT_URL --data "$YPT_DATA"
 curl $ENC_URL --data "$ENC_DATA"
 
+# Enable CustomizeUser & CustomizeAdvanced plugins by default
+get_value() {
+    grep $1 -A1 $2 | tail -1 | sed 's|.*return *"\(.*\)".*|\1|'
+}
+
+_rows='`uuid`, `status`, `created`, `modified`, `name`, `dirName`, `pluginversion`'
+_sql_code="INSERT INTO plugins ($_rows) VALUES"
+now="NOW()"
+for plugin in CustomizeUser CustomizeAdvanced; do
+    path=$WEBROOT/plugin/$plugin/$plugin.php
+    uuid=$(get_value getUUID $path)
+    stat='active'
+    name=$(get_value getName $path)
+    dirn=$plugin
+    ver=$(get_value getPluginVersion $path)
+    mysql --database=$APP --execute \
+        "$_sql_code ('$uuid', '$stat', $now, $now, '$name', '$dirn', '$ver');"
+done
+
+
 service mysql stop
 service apache2 stop
 
