@@ -83,32 +83,46 @@ def main():
     hashpass = hashlib.md5(password).hexdigest()
 
     m = MySQL()
-    m.execute('UPDATE yphptube.users SET email=\"%s\" WHERE user=\"admin\";' % email)
-    m.execute('UPDATE yphptube.users SET password=\"%s\" WHERE user=\"admin\";' % hashpass)
+
+    m.execute('UPDATE youphptube.configurations contactEmail="%s" WHERE users_id="1";' % email)
+    m.execute('UPDATE youphptube.users SET email="%s" WHERE user="admin";' % email)
+    m.execute('UPDATE youphptube.users SET password="%s" WHERE user="admin";' % hashpass)
 
     """Set password details in youPHPTube-Encoder Database (Clear and Encrypted)"""
-    m.execute('UPDATE encoder.streamers SET pass=\"%s\" WHERE id=1;' % password)
-    m.execute('UPDATE encoder.streamers SET pass=\"%s\" WHERE id=2;' % hashpass)
+    m.execute('UPDATE youphptube_encoder.streamers SET pass="%s" WHERE id=1;' % password)
+    m.execute('UPDATE youphptube_encoder.streamers SET pass="%s" WHERE id=2;' % hashpass)
 
-    urlfrontend = re.escape('https://' + domain + '/')
-    urlencoder = re.escape('https://' + domain + ':445/')
+    domain = domain + '/'
+    url = 'https://' + domain
+    enc = 'encoder/'
 
     """Set Streamer Site Configuration in Encoder"""
-    m.execute('UPDATE encoder.streamers SET siteURL=\"%s\" WHERE id=1;' % urlfrontend)
-    m.execute('UPDATE encoder.streamers SET siteURL=\"%s\" WHERE id=2;' % urlfrontend)
+    m.execute('UPDATE encoder.streamers SET siteURL="%s" WHERE id=1;' % url)
+    m.execute('UPDATE encoder.streamers SET siteURL="%s" WHERE id=2;' % url)
 
     """Configure YouPHPTube To Use Local Encoder"""
-    m.execute('UPDATE yphptube.configurations SET encoderURL=\"%s\" WHERE id=1;' % urlencoder)
+    m.execute('UPDATE youphptube.configurations SET encoderURL="%s" WHERE id=1;' % url + enc)
 
     """Lock Down Encoder To Specified Streamer Domain"""
-    m.execute('UPDATE encoder.configurations SET allowedStreamersURL=\"%s\" WHERE id=1;' % urlfrontend)
+    m.execute('UPDATE encoder.configurations SET allowedStreamersURL="%s" WHERE id=1;' % url)
 
-    """Replace URL In YouPHPTube Config File"""
-    system('sed', '-i', "s/.*webSiteRootURL.*/\$global\[\'webSiteRootURL\'\] = \'%s\'\;/g" % urlfrontend,
-        '/var/www/youphptube/videos/configuration.php')
-    """Replace URL In YouPHPTube Encoder Config File"""
-    system('sed', '-i', "s/.*webSiteRootURL.*/\$global\[\'webSiteRootURL\'\] = \'%s\'\;/g" % urlencoder,
-        '/var/www/youphptube-encoder/videos/configuration.php')
+    """Replace URL in Config Files"""
+    conf_path = '/var/www/{}/videos/configuration.php'
+    for _config, _domain in (
+                    (conf_path.format('youphptube'), domain),
+                    (conf_path.format('youphptube-encoder'), domain + enc)):
+        with open(_config, 'r') as fob:
+            lines = []
+            for line in fob.readlines():
+                if "$global['webSiteRootURL'] = 'http" in line:
+                    line = line.split('=')
+                    domain_prt = line[1].split("'")
+                    domain_prt[1] = _domain
+                    line[1] = "'".join(url)
+                    line = '='.join(line)
+                lines.append(line)
+        with open(_config, 'w') as fob:
+            fob.writelines(lines)
 
     """Restart Apache"""
     system('systemctl', 'restart', 'apache2.service')
