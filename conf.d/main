@@ -126,6 +126,8 @@ echo "deb http://deb.debian.org/debian stretch-backports main" > /etc/apt/source
 apt-get -y update
 apt-get -y -t stretch-backports install libnginx-mod-rtmp
 mv $SRC/nginx.conf /etc/nginx/nginx.conf
+service start nginx
+service stop nginx
 rm /etc/nginx/sites-enabled/default
 URL=https://raw.githubusercontent.com/arut/nginx-rtmp-module/master
 wget $URL/stat.xsl -O /var/www/html/stat.xsl
