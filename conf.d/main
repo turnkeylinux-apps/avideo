@@ -100,6 +100,12 @@ curl $ENC_URL --data "$ENC_DATA"
 service mysql stop
 service apache2 stop
 
+# Set conf files to use https
+CONF=videos/configuration.php
+for webroot in $WEBROOT $ENCROOT; do
+    sed -i "s|http://localhost|https://www.example.com" "$webroot/$CONF"
+done
+
 rm -r $WEBROOT/install $ENCROOT/install
 
 # install nginx rtmp module (and nginx itself) from backports & configure
