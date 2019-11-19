@@ -1,8 +1,21 @@
 #!/bin/bash -ex
 
-WEBROOT=/var/www/youphptube
-ENCROOT=/var/www/youphptube-encoder
+APP=youphptube
+
+WEBROOT=/var/www/$APP
+ENCROOT=$WEBROOT-encoder
 SRC=/usr/local/src
+
+WEB_USER=admin
+MAIL=$WEB_USER@example.com
+PASS=turnkey
+
+DB_NAME=$APP
+ENC_DB_NAME=${APP}_encoder
+DB_USER=youphptube
+DB_PASS=$PASS
+
+USER=www-data
 
 # modify php configuration for YouPHPTube requirements
 PHPINI=/etc/php/7.0/apache2/php.ini
@@ -27,30 +40,67 @@ a2ensite youphptube-encoder
 a2enmod proxy_wstunnel
 a2enmod rewrite
 
-# add encoder ports (http 81 & https 445) to apache ports.conf
-#ports_conf=/etc/apache2/ports.conf
-#sed -i "\|Listen 80|a Listen 81" $ports_conf
-#sed -i "\|Listen 443|a \\\tListen 445" $ports_conf
-
-# clone repo and create required dirs
-git clone --depth=1 https://github.com/DanielnetoDotCom/YouPHPTube.git $WEBROOT
-mkdir $WEBROOT/videos
-
-# clone encoder repo and create required dirs
-git clone --depth=1 https://github.com/DanielnetoDotCom/YouPHPTube-Encoder $ENCROOT
-mkdir $ENCROOT/videos
-
-# Move Config File Into Place
-mv $SRC/youphptube_configuration.php $WEBROOT/videos/configuration.php
-mv $SRC/youphptubeencoder_configuration.php $ENCROOT/videos/configuration.php
+# clone repos and create required dirs
+GH_URL=https://github.com/DanielnetoDotCom
+git clone --depth=1 $GH_URL/YouPHPTube.git $WEBROOT
+git clone --depth=1 $GH_URL/YouPHPTube-Encoder.git $ENCROOT
+mkdir {$WEBROOT,$ENCROOT}/videos
 
 # ensure correct permissions set on web directories
-chown -R www-data:www-data $WEBROOT
-chown -R www-data:www-data $ENCROOT
+chown -R $USER:$USER $WEBROOT $ENCROOT
 
-# enable remote video download
-curl -L https://yt-dl.org/downloads/latest/youtube-dl -o /usr/local/bin/youtube-dl
-chmod a+rx /usr/local/bin/youtube-dl
+service mysql start
+service apache2 start
+
+# Create Databases grant permissions
+MYSQL_BATCH="mysql --user=root --batch"
+MYSQL_ADMIN="mysqladmin --user=root"
+for db in $DB_NAME $ENC_DB_NAME; do
+    $MYSQL_ADMIN create $db;
+    $MYSQL_BATCH --database=$db -e "grant all on $db.* to '$DB_USER'@localhost identified by '$DB_PASS';"
+done
+
+# Convenience func to encode html characters
+html_enc() {
+    echo $1 \
+        | sed "s|/|%2F|g" \
+        | sed "s|@|%40|g" \
+        | sed "s|:|%3A|g" \
+        | sed "s| |+|g"
+}
+
+# Install
+WEB_ROOT=$(html_enc "$WEBROOT/")
+ENC_ROOT=$(html_enc "$ENCROOT/")
+WEB_MAIL=$(html_enc "$ADMIN_MAIL")
+LOCAL="http://localhost"
+LOCAL_ENC="$LOCAL/encoder"
+LOCAL_HOST=$(html_enc "$LOCAL/")
+LOCAL_HOST_ENC=$(html_enc "$LOCAL_ENC/")
+TITLE=$(html_enc "TurnKey YouPHPTube")
+
+DB_DATA="&databaseHost=localhost&databaseUser=$DB_USER&databasePass=$DB_PASS"
+
+d1="webSiteRootURL=$LOCAL_HOST&systemRootPath=$WEB_ROOT&webSiteTitle=$TITLE"
+d2="$DB_DATA&databasePort=3306&databaseName=$DB_NAME&mainLanguage=en"
+d3="&systemAdminPass=$PASS&contactEmail=$WEB_MAIL&createTables=2"
+YPT_DATA="$d1$d2$d3"
+YPT_URL="$LOCAL/install/checkConfiguration.php"
+
+e1="webSiteRootURL=$LOCAL_HOST_ENC&systemRootPath=$ENC_ROOT"
+e2="$DB_DATA&databaseName=$DB_NAME_ENC&createTables=1"
+e3="&siteURL=$WEB_ROOT&inputUser=$WEB_USER&inputPassword=$PASS"
+e4="&allowedStreamers=$LOCAL_HOST&defaultPriority=1"
+ENC_DATA="$e1$e2$e3$e4"
+ENC_URL="$LOCAL_ENC/install/checkConfiguration.php"
+
+curl $YPT_URL --data "$YPT_DATA"
+curl $ENC_URL --data "$ENC_DATA"
+
+service mysql stop
+service apache2 stop
+
+rm -r $WEBROOT/install $ENCROOT/install
 
 # install nginx rtmp module (and nginx itself) from backports & configure
 # including stats
@@ -61,49 +111,11 @@ mv $SRC/nginx.conf /etc/nginx/nginx.conf
 rm /etc/nginx/sites-enabled/default
 URL=https://raw.githubusercontent.com/arut/nginx-rtmp-module/master
 wget $URL/stat.xsl -O /var/www/html/stat.xsl
+
 # Create Directories necessary for live stream
 mkdir -p /HLS/{live,low}
-chown www-data:www-data /HLS/{live,low}
+chown -R $USER:$USER /HLS
 
-##---------------YouPHPTube-----------------##
-
-service mysql start
-
-# Execute YouPHPTube Create Database and Run Database Structure Script
-MYSQL_BATCH="mysql --user=root --password=$MYSQL_PASS --batch"
-MYSQL_BATCHDB="mysql --user=root --password=$MYSQL_PASS --database=yphptube --batch"
-MYSQL_ADMIN="mysqladmin --user=root --password=$MYSQL_PASS"
-
-# Execute YouPHPTubeEncoder Create Database and Run Database Structure Script
-MYSQL_BATCH="mysql --user=root --password=$MYSQL_PASS --batch"
-MYSQL_BATCHDB2="mysql --user=root --password=$MYSQL_PASS --database=encoder --batch"
-MYSQL_ADMIN="mysqladmin --user=root --password=$MYSQL_PASS"
-
-#Create Databases
-$MYSQL_ADMIN create yphptube;
-$MYSQL_ADMIN create encoder;
-
-
-# Modify Database Generation Script For MariaDB Compatibility
-# https://github.com/DanielnetoDotCom/YouPHPTube/issues/171
-sed -i "61s|255|191|" $WEBROOT/install/database.sql
-
-# Populate YouPHPTube database
-$MYSQL_BATCHDB < $WEBROOT/install/database.sql
-$MYSQL_BATCHDB < $SRC/populatedb/usersyphptube.sql
-$MYSQL_BATCHDB < $SRC/populatedb/configurationsyphptube.sql
-$MYSQL_BATCHDB < $SRC/populatedb/categoriesyphptube.sql
-
-# Populate YouPHPTubeEncoder database
-$MYSQL_BATCHDB2 < $ENCROOT/install/database.sql
-$MYSQL_BATCHDB2 < $SRC/populatedb/configurationsyphptubeencoder.sql
-$MYSQL_BATCHDB2 < $SRC/populatedb/streamersyphptubeencoder.sql
-
-# tubepass is changed at firstboot non-interactively (Secure At First Boot)
-$MYSQL_BATCH -e "grant all on yphptube.* to 'tubeuser'@localhost identified by 'tubepass';"
-$MYSQL_BATCH -e "grant all on encoder.* to 'tubeuser'@localhost identified by 'tubepass';"
-
-service mysql stop
-
-# Purge Temp Files
-rm -rf $SRC/populatedb
+# enable remote video download
+curl -L https://yt-dl.org/downloads/latest/youtube-dl -o /usr/local/bin/youtube-dl
+chmod a+rx /usr/local/bin/youtube-dl
