@@ -55,7 +55,7 @@ chmod a+rx /usr/local/bin/youtube-dl
 cat > /etc/cron.daily/youtube-dl-update <<EOF
 #!/bin/sh
 
-/usr/local/bin/youtube-dl --update
+LC_ALL=C.UTF-8 /usr/local/bin/youtube-dl --update
 EOF
 chmod +x /etc/cron.daily/youtube-dl-update
 
