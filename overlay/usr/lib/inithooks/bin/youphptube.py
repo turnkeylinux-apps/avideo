@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 """Set YouPHPTube admin password, email and domain
 Option:
     --pass=     unless provided, will ask interactively
@@ -12,16 +12,16 @@ import getopt
 import inithooks_cache
 import re
 import hashlib
-from executil import system
+import subprocess
 
 from dialog_wrapper import Dialog
 from mysqlconf import MySQL
 
 def usage(s=None):
     if s:
-        print >> sys.stderr, "Error:", s
-    print >> sys.stderr, "Syntax: %s [options]" % sys.argv[0]
-    print >> sys.stderr, __doc__
+        print("Error:", s, file=sys.stderr)
+    print("Syntax: %s [options]" % sys.argv[0], file=sys.stderr)
+    print(__doc__, file=sys.stderr)
     sys.exit(1)
 
 DEFAULT_DOMAIN="www.example.com"
@@ -30,7 +30,7 @@ def main():
     try:
         opts, args = getopt.gnu_getopt(sys.argv[1:], "h",
                                        ['help', 'pass=', 'email=', 'domain='])
-    except getopt.GetoptError, e:
+    except getopt.GetoptError as e:
         usage(e)
 
     password = ""
@@ -78,33 +78,33 @@ def main():
     inithooks_cache.write('APP_DOMAIN', domain)
 
     apache_conf = "/etc/apache2/sites-available/youphptube.conf"
-    system("sed -i \"0,\|RewriteRule|! {\|RewriteRule|s|https://.*|https://%s/\$1 [R,L]|}\" %s" % (domain, apache_conf))
-    system("sed -i \"\|RewriteCond|s|!^.*|!^%s$|\" %s" % (domain, apache_conf))
-    hashpass = hashlib.md5(password).hexdigest()
+    subprocess.run(["sed", "-i", "0,\|RewriteRule|! {\|RewriteRule|s|https://.*|https://%s/\$1 [R,L]|}" % domain, apache_conf])
+    subprocess.run(["sed", "-i", "\|RewriteCond|s|!^.*|!^%s$|" % domain, apache_conf])
+    hashpass = hashlib.md5(password.encode('utf8')).hexdigest()
 
     m = MySQL()
 
-    m.execute('UPDATE youphptube.configurations SET contactEmail="%s" WHERE users_id="1";' % email)
-    m.execute('UPDATE youphptube.users SET email="%s" WHERE user="admin";' % email)
-    m.execute('UPDATE youphptube.users SET password="%s" WHERE user="admin";' % hashpass)
+    m.execute('UPDATE youphptube.configurations SET contactEmail=%s WHERE users_id="1";', (email,))
+    m.execute('UPDATE youphptube.users SET email=%s WHERE user="admin";', (email,))
+    m.execute('UPDATE youphptube.users SET password=%s WHERE user="admin";', (hashpass,))
 
     """Set password details in youPHPTube-Encoder Database (Clear and Encrypted)"""
-    m.execute('UPDATE youphptube_encoder.streamers SET pass="%s" WHERE id=1;' % password)
-    m.execute('UPDATE youphptube_encoder.streamers SET pass="%s" WHERE id=2;' % hashpass)
+    m.execute('UPDATE youphptube_encoder.streamers SET pass=%s WHERE id=1;', (password,))
+    m.execute('UPDATE youphptube_encoder.streamers SET pass=%s WHERE id=2;', (hashpass,))
 
     domain = domain + '/'
     url = 'https://' + domain
     enc = url + 'encoder/'
 
     """Set Streamer Site Configuration in Encoder"""
-    m.execute('UPDATE youphptube_encoder.streamers SET siteURL="%s" WHERE id=1;' % url)
-    m.execute('UPDATE youphptube_encoder.streamers SET siteURL="%s" WHERE id=2;' % url)
+    m.execute('UPDATE youphptube_encoder.streamers SET siteURL=%s WHERE id=1;', (url,))
+    m.execute('UPDATE youphptube_encoder.streamers SET siteURL=%s WHERE id=2;', (url,))
 
     """Configure YouPHPTube To Use Local Encoder"""
-    m.execute('UPDATE youphptube.configurations SET encoderURL="%s" WHERE id=1;' % (enc))
+    m.execute('UPDATE youphptube.configurations SET encoderURL=%s WHERE id=1;', (enc,))
 
     """Lock Down Encoder To Specified Streamer Domain"""
-    m.execute('UPDATE youphptube_encoder.configurations SET allowedStreamersURL="%s" WHERE id=1;' % url)
+    m.execute('UPDATE youphptube_encoder.configurations SET allowedStreamersURL=%s WHERE id=1;', (url,))
 
     """Replace URL in Config Files"""
     conf_path = '/var/www/{}/videos/configuration.php'
@@ -125,9 +125,9 @@ def main():
             fob.writelines(lines)
 
     """Restart Apache"""
-    system('systemctl', 'restart', 'apache2.service')
+    subprocess.run(['systemctl', 'restart', 'apache2.service'])
     """Restart nginx"""
-    system('systemctl', 'restart', 'nginx.service')
+    subprocess.run(['systemctl', 'restart', 'nginx.service'])
 
 if __name__ == "__main__":
     main()

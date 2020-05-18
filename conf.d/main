@@ -18,7 +18,7 @@ DB_PASS=$PASS
 USER=www-data
 
 # modify php configuration for YouPHPTube requirements
-PHPINI=/etc/php/7.0/apache2/php.ini
+PHPINI=/etc/php/7.3/apache2/php.ini
 sed -i "s|^memory_limit.*|memory_limit = 512M|" $PHPINI
 sed -i "s|^upload_max_filesize.*|upload_max_filesize = 1000M|" $PHPINI
 sed -i "s|^post_max_size.*|post_max_size = 1000M|" $PHPINI
@@ -140,20 +140,17 @@ CONF=videos/configuration.php
 for webroot in $WEBROOT $ENCROOT; do
     sed -i "s|http://localhost|https://www.example.com|" "$webroot/$CONF"
 done
+sed -i \
+    "s|\$global\['webSiteRootPath'\] = '';|\$global['webSiteRootPath'] = '/';|" \
+    $WEBROOT/videos/configuration.php
 
 rm -r $WEBROOT/install $ENCROOT/install
 
-# install nginx rtmp module (and nginx itself) from backports & configure
-# including stats
-echo "deb http://deb.debian.org/debian stretch-backports main" > /etc/apt/sources.list.d/backports.list
-apt-get -y update
-apt-get -y -t stretch-backports install libnginx-mod-rtmp
 mv $SRC/nginx.conf /etc/nginx/nginx.conf
-service start nginx
-service stop nginx
 rm /etc/nginx/sites-enabled/default
-URL=https://raw.githubusercontent.com/arut/nginx-rtmp-module/master
-wget $URL/stat.xsl -O /var/www/html/stat.xsl
+
+# to avoid config regen which breaks website
+mv /usr/local/src/configuration.php /var/www/youphptube/videos
 
 # Create Directories necessary for live stream
 mkdir -p /HLS/{live,low}
