@@ -1,5 +1,5 @@
 AVideo - Your own Tube website
-==================================
+==============================
 
 AVideo is an open source solution that is freely available
 to everyone. The idea came from the need to disseminate videos with
@@ -18,8 +18,8 @@ This appliance includes all the standard features in `TurnKey Core`_,
 and on top of that:
 
 - AVideo installed from upstream source to /var/www/avideo.
-- AVideo configured to support encoding - listening on ports 81 (http)
-  and 445 (https).
+- AVideo configured to support encoding - installed from upstream source to
+  /var/www/avideo-encoding.
 - SSL support out of the box.
 - `Adminer`_ administration frontend for MySQL (listening on port
   12322 - uses SSL).
@@ -37,4 +37,4 @@ Credentials *(passwords set at first boot)*
 
 .. _AVideo: https://avideo.com/
 .. _TurnKey Core: https://www.turnkeylinux.org/core
-.. _Adminer: http://www.adminer.org/
+.. _Adminer: https://www.adminer.org/
