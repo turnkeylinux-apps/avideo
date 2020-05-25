@@ -1,0 +1,7 @@
+#!/bin/bash -e
+# set avideo admin password and email
+
+. /etc/default/inithooks
+
+[ -e $INITHOOKS_CONF ] && . $INITHOOKS_CONF
+$INITHOOKS_PATH/bin/avideo.py --pass="$APP_PASS" --email="$APP_EMAIL" --domain="$APP_DOMAIN"
