@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-"""Set YouPHPTube admin password, email and domain
+"""Set AVideo admin password, email and domain
 Option:
     --pass=     unless provided, will ask interactively
     --email=    unless provided, will ask interactively
@@ -49,16 +49,16 @@ def main():
     if not password:
         d = Dialog('TurnKey Linux - First boot configuration')
         password = d.get_password(
-            "YouPHPTube Password",
-            "Enter new password for the YouPHPTube 'admin' account.")
+            "AVideo Password",
+            "Enter new password for the AVideo 'admin' account.")
 
     if not email:
         if 'd' not in locals():
             d = Dialog('TurnKey Linux - First boot configuration')
 
         email = d.get_email(
-            "YouPHPTube Email",
-            "Please enter email address for the YouPHPTube 'admin' account.",
+            "AVideo Email",
+            "Please enter email address for the AVideo 'admin' account.",
             "admin@example.com")
 
     inithooks_cache.write('APP_EMAIL', email)
@@ -68,8 +68,8 @@ def main():
             d = Dialog('TurnKey Linux - First boot configuration')
 
         domain = d.get_input(
-            "YouPHPTube Domain",
-            "Please enter the Domain or IP address for YouPHPTube.",
+            "AVideo Domain",
+            "Please enter the Domain or IP address for AVideo.",
             DEFAULT_DOMAIN)
 
     if domain == "DEFAULT":
@@ -77,40 +77,40 @@ def main():
 
     inithooks_cache.write('APP_DOMAIN', domain)
 
-    apache_conf = "/etc/apache2/sites-available/youphptube.conf"
+    apache_conf = "/etc/apache2/sites-available/avideo.conf"
     subprocess.run(["sed", "-i", "0,\|RewriteRule|! {\|RewriteRule|s|https://.*|https://%s/\$1 [R,L]|}" % domain, apache_conf])
     subprocess.run(["sed", "-i", "\|RewriteCond|s|!^.*|!^%s$|" % domain, apache_conf])
     hashpass = hashlib.md5(password.encode('utf8')).hexdigest()
 
     m = MySQL()
 
-    m.execute('UPDATE youphptube.configurations SET contactEmail=%s WHERE users_id="1";', (email,))
-    m.execute('UPDATE youphptube.users SET email=%s WHERE user="admin";', (email,))
-    m.execute('UPDATE youphptube.users SET password=%s WHERE user="admin";', (hashpass,))
+    m.execute('UPDATE avideo.configurations SET contactEmail=%s WHERE users_id="1";', (email,))
+    m.execute('UPDATE avideo.users SET email=%s WHERE user="admin";', (email,))
+    m.execute('UPDATE avideo.users SET password=%s WHERE user="admin";', (hashpass,))
 
-    """Set password details in youPHPTube-Encoder Database (Clear and Encrypted)"""
-    m.execute('UPDATE youphptube_encoder.streamers SET pass=%s WHERE id=1;', (password,))
-    m.execute('UPDATE youphptube_encoder.streamers SET pass=%s WHERE id=2;', (hashpass,))
+    """Set password details in AVideo-Encoder Database (Clear and Encrypted)"""
+    m.execute('UPDATE avideo_encoder.streamers SET pass=%s WHERE id=1;', (password,))
+    m.execute('UPDATE avideo_encoder.streamers SET pass=%s WHERE id=2;', (hashpass,))
 
     domain = domain + '/'
     url = 'https://' + domain
     enc = url + 'encoder/'
 
     """Set Streamer Site Configuration in Encoder"""
-    m.execute('UPDATE youphptube_encoder.streamers SET siteURL=%s WHERE id=1;', (url,))
-    m.execute('UPDATE youphptube_encoder.streamers SET siteURL=%s WHERE id=2;', (url,))
+    m.execute('UPDATE avideo_encoder.streamers SET siteURL=%s WHERE id=1;', (url,))
+    m.execute('UPDATE avideo_encoder.streamers SET siteURL=%s WHERE id=2;', (url,))
 
-    """Configure YouPHPTube To Use Local Encoder"""
-    m.execute('UPDATE youphptube.configurations SET encoderURL=%s WHERE id=1;', (enc,))
+    """Configure AVideo To Use Local Encoder"""
+    m.execute('UPDATE avideo.configurations SET encoderURL=%s WHERE id=1;', (enc,))
 
     """Lock Down Encoder To Specified Streamer Domain"""
-    m.execute('UPDATE youphptube_encoder.configurations SET allowedStreamersURL=%s WHERE id=1;', (url,))
+    m.execute('UPDATE avideo_encoder.configurations SET allowedStreamersURL=%s WHERE id=1;', (url,))
 
     """Replace URL in Config Files"""
     conf_path = '/var/www/{}/videos/configuration.php'
     for _config, _url in (
-                    (conf_path.format('youphptube'), url),
-                    (conf_path.format('youphptube-encoder'), enc)):
+                    (conf_path.format('avideo'), url),
+                    (conf_path.format('avideo-encoder'), enc)):
         with open(_config, 'r') as fob:
             lines = []
             for line in fob.readlines():

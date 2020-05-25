@@ -1,6 +1,6 @@
 #!/bin/bash -ex
 
-APP=youphptube
+APP=avideo
 
 WEBROOT=/var/www/$APP
 ENCROOT=$WEBROOT-encoder
@@ -12,12 +12,12 @@ PASS=turnkey
 
 DB_NAME=$APP
 DB_NAME_ENC=${APP}_encoder
-DB_USER=youphptube
+DB_USER=avideo
 DB_PASS=$PASS
 
 USER=www-data
 
-# modify php configuration for YouPHPTube requirements
+# modify php configuration for AVideo requirements
 PHPINI=/etc/php/7.3/apache2/php.ini
 sed -i "s|^memory_limit.*|memory_limit = 512M|" $PHPINI
 sed -i "s|^upload_max_filesize.*|upload_max_filesize = 1000M|" $PHPINI
@@ -26,7 +26,7 @@ sed -i "s|^allow_url_fopen.*|allow_url_fopen = On|" $PHPINI
 sed -i "s|^max_execution.*|max_execution_time = 21600|" $PHPINI
 
 # enable chat (via Apache TLS)
-systemctl enable youphptube-streamchat.service
+systemctl enable avideo-streamchat.service
 cat > /etc/apache2/mods-available/proxy.conf << EOF
 <IfModule mod_proxy.c>
         ProxyPass /wss/ ws://127.0.0.1:8888/
@@ -35,29 +35,29 @@ EOF
 
 # more Apache conf
 a2dissite 000-default
-a2ensite youphptube
-a2ensite youphptube-encoder
+a2ensite avideo
+a2ensite avideo-encoder
 a2enmod proxy_wstunnel
 a2enmod rewrite
 
 # clone repos and create required dirs
-GH_URL=https://github.com/DanielnetoDotCom
-git clone --depth=1 $GH_URL/YouPHPTube.git $WEBROOT
-git clone --depth=1 $GH_URL/YouPHPTube-Encoder.git $ENCROOT
+GH_URL=https://github.com/WWBN
+git clone --depth=1 $GH_URL/AVideo.git $WEBROOT
+git clone --depth=1 $GH_URL/AVideo-Encoder.git $ENCROOT
 mkdir {$WEBROOT,$ENCROOT}/videos
 
 # ensure correct permissions set on web directories
 chown -R $USER:$USER $WEBROOT $ENCROOT
 
 # enable remote video download (required dependency of encoder) & auto-update daily
-curl -L https://yt-dl.org/downloads/latest/youtube-dl -o /usr/local/bin/youtube-dl
-chmod a+rx /usr/local/bin/youtube-dl
-cat > /etc/cron.daily/youtube-dl-update <<EOF
+curl -L https://yt-dl.org/downloads/latest/avideo-dl -o /usr/local/bin/avideo-dl
+chmod a+rx /usr/local/bin/avideo-dl
+cat > /etc/cron.daily/avideo-dl-update <<EOF
 #!/bin/sh
 
-LC_ALL=C.UTF-8 /usr/local/bin/youtube-dl --update
+LC_ALL=C.UTF-8 /usr/local/bin/avideo-dl --update
 EOF
-chmod +x /etc/cron.daily/youtube-dl-update
+chmod +x /etc/cron.daily/avideo-dl-update
 
 service mysql start
 service apache2 start
@@ -87,7 +87,7 @@ LOCAL="http://localhost"
 LOCAL_ENC="$LOCAL/encoder"
 LOCAL_HOST=$(html_enc "$LOCAL/")
 LOCAL_HOST_ENC=$(html_enc "$LOCAL_ENC/")
-TITLE=$(html_enc "TurnKey YouPHPTube")
+TITLE=$(html_enc "TurnKey AVideo")
 
 DB_DATA="&databaseHost=localhost&databaseUser=$DB_USER&databasePass=$DB_PASS"
 
@@ -150,7 +150,7 @@ mv $SRC/nginx.conf /etc/nginx/nginx.conf
 rm /etc/nginx/sites-enabled/default
 
 # to avoid config regen which breaks website
-mv /usr/local/src/configuration.php /var/www/youphptube/videos
+mv /usr/local/src/configuration.php /var/www/avideo/videos
 
 # Create Directories necessary for live stream
 mkdir -p /HLS/{live,low}

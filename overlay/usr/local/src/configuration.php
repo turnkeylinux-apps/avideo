@@ -9,7 +9,7 @@ if(!empty($_SERVER['SERVER_NAME']) && $_SERVER['SERVER_NAME']!=='localhost' && !
 }else{
     $global['webSiteRootURL'] = 'https://www.example.com/';
 }
-$global['systemRootPath'] = '/var/www/youphptube/';
+$global['systemRootPath'] = '/var/www/avideo/';
 $global['salt'] = '';
 $global['enableDDOSprotection'] = 1;
 $global['ddosMaxConnections'] = 40;
@@ -28,9 +28,9 @@ if(empty($global['webSiteRootPath'])){
 }
 
 $mysqlHost = 'localhost';
-$mysqlUser = 'youphptube';
+$mysqlUser = 'avideo';
 $mysqlPass = '';
-$mysqlDatabase = 'youphptube';
+$mysqlDatabase = 'avideo';
 
 /**
  * Do NOT change from here
