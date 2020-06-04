@@ -1,7 +1,7 @@
 AVideo - Your own Tube website
 ==============================
 
-AVideo is an open source solution that is freely available
+AVideo_ is an open source solution that is freely available
 to everyone. The idea came from the need to disseminate videos with
 sensitive content using the internal, network infrastructure of an
 institution. Soon the idea grew and took up space on the internet, as
@@ -35,6 +35,6 @@ Credentials *(passwords set at first boot)*
 -  AVideo: username **admin**
 
 
-.. _AVideo: https://avideo.com/
+.. _AVideo: https://platform.avideo.com/AVideo_OpenSource
 .. _TurnKey Core: https://www.turnkeylinux.org/core
 .. _Adminer: https://www.adminer.org/
