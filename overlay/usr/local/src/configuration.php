@@ -15,7 +15,7 @@ $global['enableDDOSprotection'] = 1;
 $global['ddosMaxConnections'] = 40;
 $global['ddosSecondTimeout'] = 5;
 $global['strictDDOSprotection'] = 0;
-$global['noDebug'] = 0;
+$global['noDebug'] = 1;
 $global['webSiteRootPath'] = '/';
 if(empty($global['webSiteRootPath'])){
     preg_match('/https?:\/\/[^\/]+(.*)/i', $global['webSiteRootURL'], $matches);

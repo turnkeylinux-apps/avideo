@@ -18,7 +18,7 @@ DB_PASS=$PASS
 USER=www-data
 
 # modify php configuration for AVideo requirements
-PHPINI=/etc/php/7.3/apache2/php.ini
+PHPINI=/etc/php/7.4/apache2/php.ini
 sed -i "s|^memory_limit.*|memory_limit = 512M|" $PHPINI
 sed -i "s|^upload_max_filesize.*|upload_max_filesize = 1000M|" $PHPINI
 sed -i "s|^post_max_size.*|post_max_size = 1000M|" $PHPINI

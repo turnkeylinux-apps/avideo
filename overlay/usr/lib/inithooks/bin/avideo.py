@@ -9,12 +9,12 @@ Option:
 
 import sys
 import getopt
-import inithooks_cache
+from libinithooks import inithooks_cache
 import re
 import hashlib
 import subprocess
 
-from dialog_wrapper import Dialog
+from libinithooks.dialog_wrapper import Dialog
 from mysqlconf import MySQL
 
 def usage(s=None):
@@ -104,7 +104,7 @@ def main():
     m.execute('UPDATE avideo.configurations SET encoderURL=%s WHERE id=1;', (enc,))
 
     """Lock Down Encoder To Specified Streamer Domain"""
-    m.execute('UPDATE avideo_encoder.configurations SET allowedStreamersURL=%s WHERE id=1;', (url,))
+    m.execute('UPDATE avideo_encoder.configurations_encoder SET allowedStreamersURL=%s WHERE id=1;', (url,))
 
     """Replace URL in Config Files"""
     conf_path = '/var/www/{}/videos/configuration.php'

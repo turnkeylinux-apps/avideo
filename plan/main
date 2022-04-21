@@ -13,8 +13,7 @@ libjs-prototype
 libjs-scriptaculous
 libphp-phpmailer
 libphp-snoopy
-php-gettext
-tinymce
+php-php-gettext
 libpcre3
 daemon
 nginx
