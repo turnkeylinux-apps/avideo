@@ -1,3 +1,15 @@
+turnkey-avideo-18.0 (1) turnkey; urgency=low
+
+  * Update Avideo to latest upstream (git repo master).
+
+  * Updated all relevant Debian packages to Bookworm/12 versions; including
+    PHP 8.2.
+
+  * Note: Please refer to turnkey-core's 18.0 changelog for changes common to all
+    appliances. Here we only describe changes specific to this appliance.
+
+ -- Anton Pyrogovskyi <anton@turnkeylinux.org>  Tue, 20 Feb 2024 20:42:54 +0100
+
 turnkey-avideo-17.1 (1) turnkey; urgency=low
 
   * Updated all Debian packages to latest.
