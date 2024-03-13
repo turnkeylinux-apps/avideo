@@ -18,7 +18,7 @@ DB_PASS=$PASS
 USER=www-data
 
 # modify php configuration for AVideo requirements
-PHPINI=/etc/php/7.4/apache2/php.ini
+PHPINI=/etc/php/?.?/apache2/php.ini
 sed -i "s|^memory_limit.*|memory_limit = 512M|" $PHPINI
 sed -i "s|^upload_max_filesize.*|upload_max_filesize = 1000M|" $PHPINI
 sed -i "s|^post_max_size.*|post_max_size = 1000M|" $PHPINI
@@ -106,31 +106,6 @@ ENC_URL="$LOCAL_ENC/install/checkConfiguration.php"
 
 curl $YPT_URL --data "$YPT_DATA"
 curl $ENC_URL --data "$ENC_DATA"
-
-# Enable CustomizeUser & CustomizeAdvanced plugins by default
-# Live and LiveChat are left disabled by default as they have issues with the
-# self signed certs
-plugins="CustomizeUser CustomizeAdvanced" # Live LiveChat"
-get_value() {
-    grep "public function $1" -A1 $2 | tail -1 \
-        | sed 's|.*return *"\(.*\)".*|\1|'
-}
-
-_rows='`uuid`, `status`, `created`, `modified`, `name`, `dirName`, `pluginversion`'
-_sql_code="INSERT INTO plugins ($_rows) VALUES"
-now="NOW()"
-
-for plugin in $plugins; do
-    path=$WEBROOT/plugin/$plugin/$plugin.php
-    uuid=$(get_value getUUID $path)
-    stat='active'
-    name=$(get_value getName $path)
-    dirn=$plugin
-    ver=$(get_value getPluginVersion $path)
-    mysql --database=$APP --execute \
-        "$_sql_code ('$uuid', '$stat', $now, $now, '$name', '$dirn', '$ver');"
-done
-
 
 service mysql stop
 service apache2 stop
