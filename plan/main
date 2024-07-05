@@ -5,6 +5,7 @@ php-curl
 php-gd
 php-intl
 php-xml
+libapache2-mod-xsendfilel
 ffmpeg
 libimage-exiftool-perl
 libjs-cropper

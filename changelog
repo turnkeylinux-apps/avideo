@@ -1,3 +1,24 @@
+turnkey-avideo-18.2 (1) turnkey; urgency=low
+
+  * v18.1 rebuild - includes latest Debian & TurnKey packages.
+
+  * Update Avideo to latest upsteam - v14.3.
+
+  * Include and enable Apache xsendfile module - closes #1966.
+
+  * Configuration console (confconsole) - v2.1.6:
+    - Let's Encrypt/Dehydrated - bugfix cron failure - closes #1962.
+    - General dehydrated-wrapper code cleanup - now passes shellcheck.
+
+  * Reduce log noise by creating ntpsec log dir - closes #1952.
+
+  * Apache mod_evasive config improvements:
+    - Bump DOSPageCount from (default) 2 -> 5 - closes #1951.
+    - DOSLogDir - use default log dir & fix permissions - closes #1950.
+    - Add DOSWhitelist example - commented out.
+
+ -- Jeremy Davis <jeremy@turnkeylinux.org>  Fri, 05 Jul 2024 11:04:36 +0000
+
 turnkey-avideo-18.1 (1) turnkey; urgency=low
 
   * Update Avideo to latest upstream (git repo master) - v12.4.
