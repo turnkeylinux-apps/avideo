@@ -29,7 +29,7 @@ sed -i "s|^max_execution.*|max_execution_time = 21600|" $PHPINI
 systemctl enable avideo-streamchat.service
 cat > /etc/apache2/mods-available/proxy.conf << EOF
 <IfModule mod_proxy.c>
-        ProxyPass /wss/ ws://127.0.0.1:8888/
+    ProxyPass /wss/ ws://127.0.0.1:8888/
 </IfModule>
 EOF
 
@@ -39,6 +39,7 @@ a2ensite avideo
 a2ensite avideo-encoder
 a2enmod proxy_wstunnel
 a2enmod rewrite
+a2enmod xsendfile
 
 # clone repos and create required dirs
 GH_URL=https://github.com/WWBN
