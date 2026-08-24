@@ -11,6 +11,8 @@ page=/tmp/tkl-avideo-page.$$
 response=/tmp/tkl-avideo-response.$$
 media=/tmp/tkl-avideo-media.$$
 policy=/tmp/tkl-avideo-policy.$$
+encoder_verify_cache=$(php -r \
+    'echo sys_get_temp_dir(), "/", md5($argv[1]), "_verify.log";' "$base/")
 
 report_error() {
     printf 'test_failure line=%s status=%s command=%q\n' \
@@ -21,7 +23,7 @@ trap 'report_error "$LINENO" "$?" "$BASH_COMMAND"' ERR
 
 cleanup() {
     rm -f -- "$cookie" "$encoder_cookie" "$page" "$response" "$media" \
-        "$policy"
+        "$policy" "$encoder_verify_cache"
 }
 trap cleanup EXIT
 
@@ -121,6 +123,7 @@ curl --insecure --fail --silent --show-error --location \
     "$base/encoder/" >"$page"
 grep -q 'id="loginForm"' "$page"
 grep -q 'id="siteURL"' "$page"
+printf '%s\n' '{"verified":true}' >"$encoder_verify_cache"
 curl --insecure --fail --silent --show-error \
     --cookie-jar "$encoder_cookie" --cookie "$encoder_cookie" \
     --data-urlencode 'user=admin' \
