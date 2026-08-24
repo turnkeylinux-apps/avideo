@@ -1,3 +1,20 @@
+turnkey-avideo-19.0 (1) turnkey; urgency=low
+
+  * Upgrade the base distribution to Debian 13/Trixie.
+
+  * Install AVideo 29.0 and AVideo Encoder 8.0 from their pinned official
+    upstream release tags.
+
+  * Use the Debian Trixie media stack, including FFmpeg, ExifTool, Nginx RTMP,
+    Apache XSendFile and yt-dlp.
+
+  * Preserve the firstboot administrator, domain and Encoder configuration,
+    and add a verified release update helper.
+
+  * See the TurnKey Core 19.0 changelog for changes common to all appliances.
+
+ -- TurnKey Linux release engineering <release@turnkeylinux.org>  Mon, 24 Aug 2026 00:00:00 +0000
+
 turnkey-avideo-18.2 (1) turnkey; urgency=low
 
   * v18.1 rebuild - includes latest Debian & TurnKey packages.

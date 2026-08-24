@@ -1,0 +1,85 @@
+#!/bin/sh
+set -eu
+
+usage() {
+    echo "Usage: avideo-update [--check] streamer|encoder [RELEASE EXPECTED_COMMIT]" >&2
+    exit 2
+}
+
+mode=update
+if [ "${1:-}" = --check ]; then
+    mode=check
+    shift
+fi
+
+component=${1:-}
+case "$component" in
+    streamer)
+        root=/var/www/avideo
+        expected_origin=https://github.com/WWBN/AVideo.git
+        ;;
+    encoder)
+        root=/var/www/avideo-encoder
+        expected_origin=https://github.com/WWBN/AVideo-Encoder.git
+        ;;
+    *) usage ;;
+esac
+shift
+
+test "$(id -u)" -eq 0 || {
+    echo "avideo-update must run as root" >&2
+    exit 1
+}
+
+git_run() {
+    git -c safe.directory="$root" -C "$root" "$@"
+}
+
+test "$(git_run remote get-url origin)" = "$expected_origin" || {
+    echo "Refusing an unexpected upstream origin for $component" >&2
+    exit 1
+}
+
+git_run diff --quiet --ignore-submodules -- || {
+    echo "Refusing to update modified tracked files in $root" >&2
+    exit 1
+}
+git_run diff --cached --quiet --ignore-submodules -- || {
+    echo "Refusing to update staged tracked files in $root" >&2
+    exit 1
+}
+
+if [ "$mode" = check ]; then
+    test "$#" -eq 0 || usage
+    latest=$(git_run ls-remote --exit-code --refs --tags origin |
+        awk '{sub("refs/tags/", "", $2); print $2, $1}' |
+        sort -k1,1V | tail -n 1)
+    test -n "$latest"
+    echo "component=$component installed_commit=$(git_run rev-parse HEAD) latest_release=$latest"
+    exit 0
+fi
+
+test "$#" -eq 2 || usage
+release=$1
+expected_commit=$2
+echo "$release" | grep -Eq '^[0-9][0-9A-Za-z._-]*$' || usage
+echo "$expected_commit" | grep -Eq '^[0-9a-f]{40}$' || usage
+
+git_run fetch --quiet --depth=1 origin "refs/tags/$release"
+fetched_commit=$(git_run rev-parse 'FETCH_HEAD^{commit}')
+test "$fetched_commit" = "$expected_commit" || {
+    echo "Release $release resolved to unexpected commit $fetched_commit" >&2
+    exit 1
+}
+
+git_run checkout --quiet --detach "$fetched_commit"
+php /usr/local/lib/turnkey-avideo/update-db.php "$component"
+
+if [ "$component" = streamer ]; then
+    chown -R www-data:www-data "$root/videos" "$root/plugin"
+else
+    chown -R www-data:www-data "$root/videos"
+fi
+systemctl restart apache2.service
+
+echo "updated_component=$component release=$release commit=$fetched_commit"

@@ -17,9 +17,12 @@ that allows you to directly view and stream videos of your phone.
 This appliance includes all the standard features in `TurnKey Core`_,
 and on top of that:
 
-- AVideo installed from upstream source to /var/www/avideo.
-- AVideo configured to support encoding - installed from upstream source to
-  /var/www/avideo-encoding.
+- AVideo 29.0 installed from the official tagged upstream source to
+  /var/www/avideo.
+- AVideo configured to support encoding, with AVideo Encoder 8.0 installed
+  from the official tagged upstream source to /var/www/avideo-encoder.
+- ``avideo-update`` provides a pinned release update path for both source
+  checkouts and their database migrations.
 - SSL support out of the box.
 - `Adminer`_ administration frontend for MySQL (listening on port
   12322 - uses SSL).

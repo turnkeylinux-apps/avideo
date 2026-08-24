@@ -6,7 +6,12 @@ WEBROOT=/var/www/$APP
 ENCROOT=$WEBROOT-encoder
 SRC=/usr/local/src
 
-WEB_USER=admin
+AVIDEO_REF=29.0
+AVIDEO_COMMIT=2386f39caea1d2ef36267b252fa76af283294623
+ENCODER_REF=8.0
+ENCODER_COMMIT=71759ba94928bd324b6171b53b1d3e9e43760b91
+
+WEB_USER='admin'
 MAIL=$WEB_USER@example.com
 PASS=turnkey
 
@@ -18,116 +23,77 @@ DB_PASS=$PASS
 USER=www-data
 
 # modify php configuration for AVideo requirements
-PHPINI=/etc/php/?.?/apache2/php.ini
-sed -i "s|^memory_limit.*|memory_limit = 512M|" $PHPINI
-sed -i "s|^upload_max_filesize.*|upload_max_filesize = 1000M|" $PHPINI
-sed -i "s|^post_max_size.*|post_max_size = 1000M|" $PHPINI
-sed -i "s|^allow_url_fopen.*|allow_url_fopen = On|" $PHPINI
-sed -i "s|^max_execution.*|max_execution_time = 21600|" $PHPINI
+for php_ini in /etc/php/*/apache2/php.ini; do
+    test -f "$php_ini"
+    sed -i "s|^memory_limit.*|memory_limit = 512M|" "$php_ini"
+    sed -i "s|^upload_max_filesize.*|upload_max_filesize = 1000M|" "$php_ini"
+    sed -i "s|^post_max_size.*|post_max_size = 1000M|" "$php_ini"
+    sed -i "s|^allow_url_fopen.*|allow_url_fopen = On|" "$php_ini"
+    sed -i "s|^max_execution.*|max_execution_time = 21600|" "$php_ini"
+done
 
-# enable chat (via Apache TLS)
-systemctl enable avideo-streamchat.service
-cat > /etc/apache2/mods-available/proxy.conf << EOF
-<IfModule mod_proxy.c>
-    ProxyPass /wss/ ws://127.0.0.1:8888/
-</IfModule>
-EOF
-
-# more Apache conf
+# configure Apache for AVideo
 a2dissite 000-default
 a2ensite avideo
 a2ensite avideo-encoder
-a2enmod proxy_wstunnel
+a2enmod expires
+a2enmod headers
 a2enmod rewrite
 a2enmod xsendfile
 
-# clone repos and create required dirs
+# Install the official release tags and fail if either tag moves.
 GH_URL=https://github.com/WWBN
-git clone --depth=1 $GH_URL/AVideo.git $WEBROOT
-git clone --depth=1 $GH_URL/AVideo-Encoder.git $ENCROOT
-mkdir {$WEBROOT,$ENCROOT}/videos
+git clone --depth=1 --branch "$AVIDEO_REF" $GH_URL/AVideo.git $WEBROOT
+git clone --depth=1 --branch "$ENCODER_REF" $GH_URL/AVideo-Encoder.git $ENCROOT
+test "$(git -C "$WEBROOT" rev-parse HEAD)" = "$AVIDEO_COMMIT"
+test "$(git -C "$ENCROOT" rev-parse HEAD)" = "$ENCODER_COMMIT"
+git -C "$WEBROOT" fsck --strict
+git -C "$ENCROOT" fsck --strict
+mkdir -p {$WEBROOT,$ENCROOT}/videos
+
+# Encoder 8.0 still invokes the historical executable name.
+ln -s /usr/bin/yt-dlp /usr/local/bin/youtube-dl
 
 # ensure correct permissions set on web directories
 chown -R $USER:$USER $WEBROOT $ENCROOT
-
-# enable remote video download (required dependency of encoder) & auto-update daily
-curl -L https://yt-dl.org/downloads/latest/avideo-dl -o /usr/local/bin/avideo-dl
-chmod a+rx /usr/local/bin/avideo-dl
-cat > /etc/cron.daily/avideo-dl-update <<EOF
-#!/bin/sh
-
-LC_ALL=C.UTF-8 /usr/local/bin/avideo-dl --update
-EOF
-chmod +x /etc/cron.daily/avideo-dl-update
 
 service mysql start
 service apache2 start
 
 # Create Databases grant permissions
-MYSQL_BATCH="mysql --user=root --batch"
-MYSQL_ADMIN="mysqladmin --user=root"
 for db in $DB_NAME $DB_NAME_ENC; do
-    $MYSQL_ADMIN create $db;
-    $MYSQL_BATCH --database=$db -e "grant all on $db.* to '$DB_USER'@localhost identified by '$DB_PASS';"
+    mysqladmin --user=root create "$db"
+done
+mysql --user=root --batch \
+    -e "CREATE USER '$DB_USER'@'localhost' IDENTIFIED BY '$DB_PASS';"
+for db in $DB_NAME $DB_NAME_ENC; do
+    mysql --user=root --batch \
+        -e "GRANT ALL ON $db.* TO '$DB_USER'@'localhost';"
 done
 
-# Convenience func to encode html characters
-html_enc() {
-    echo $1 \
-        | sed "s|/|%2F|g" \
-        | sed "s|@|%40|g" \
-        | sed "s|:|%3A|g" \
-        | sed "s| |+|g"
-}
+# Install both applications through their CLI-only configuration entry point.
+php $SRC/turnkey-avideo-install.php streamer \
+    "$WEBROOT" https://www.example.com/ "$DB_NAME" "$DB_USER" \
+    "$DB_PASS" "$PASS" "$MAIL"
+php $SRC/turnkey-avideo-install.php encoder \
+    "$ENCROOT" https://www.example.com/encoder/ "$DB_NAME_ENC" "$DB_USER" \
+    "$DB_PASS" "$PASS" "$MAIL" https://www.example.com/
 
-# Install
-WEB_ROOT=$(html_enc "$WEBROOT/")
-ENC_ROOT=$(html_enc "$ENCROOT/")
-WEB_MAIL=$(html_enc "$ADMIN_MAIL")
-LOCAL="http://localhost"
-LOCAL_ENC="$LOCAL/encoder"
-LOCAL_HOST=$(html_enc "$LOCAL/")
-LOCAL_HOST_ENC=$(html_enc "$LOCAL_ENC/")
-TITLE=$(html_enc "TurnKey AVideo")
+# Seed one upstream media asset as a deterministic playback fixture.
+php $SRC/turnkey-avideo-fixture.php
+chown -R $USER:$USER $WEBROOT/videos
 
-DB_DATA="&databaseHost=localhost&databaseUser=$DB_USER&databasePass=$DB_PASS"
-
-d1="webSiteRootURL=$LOCAL_HOST&systemRootPath=$WEB_ROOT&webSiteTitle=$TITLE"
-d2="$DB_DATA&databasePort=3306&databaseName=$DB_NAME&mainLanguage=en"
-d3="&systemAdminPass=$PASS&contactEmail=$WEB_MAIL&createTables=2"
-YPT_DATA="$d1$d2$d3"
-YPT_URL="$LOCAL/install/checkConfiguration.php"
-
-e1="webSiteRootURL=$LOCAL_HOST_ENC&systemRootPath=$ENC_ROOT"
-e2="$DB_DATA&databaseName=$DB_NAME_ENC&createTables=2"
-e3="&siteURL=$LOCAL_host&inputUser=$WEB_USER&inputPassword=$PASS"
-e4="&allowedStreamers=$LOCAL_HOST&defaultPriority=1"
-ENC_DATA="$e1$e2$e3$e4"
-ENC_URL="$LOCAL_ENC/install/checkConfiguration.php"
-
-curl $YPT_URL --data "$YPT_DATA"
-curl $ENC_URL --data "$ENC_DATA"
+rm $SRC/turnkey-avideo-install.php $SRC/turnkey-avideo-fixture.php
 
 service mysql stop
 service apache2 stop
 
-# Set conf files to use https
-CONF=videos/configuration.php
-for webroot in $WEBROOT $ENCROOT; do
-    sed -i "s|http://localhost|https://www.example.com|" "$webroot/$CONF"
-done
-sed -i \
-    "s|\$global\['webSiteRootPath'\] = '';|\$global['webSiteRootPath'] = '/';|" \
-    $WEBROOT/videos/configuration.php
-
-rm -r $WEBROOT/install $ENCROOT/install
-
 mv $SRC/nginx.conf /etc/nginx/nginx.conf
 rm /etc/nginx/sites-enabled/default
-
-# to avoid config regen which breaks website
-mv /usr/local/src/configuration.php /var/www/avideo/videos
 
 # Create Directories necessary for live stream
 mkdir -p /HLS/{live,low}
 chown -R $USER:$USER /HLS
+
+apache2ctl -t
+nginx -t

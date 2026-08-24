@@ -11,7 +11,7 @@ import sys
 import getopt
 from libinithooks import inithooks_cache
 import re
-import hashlib
+import ipaddress
 import subprocess
 
 from libinithooks.dialog_wrapper import Dialog
@@ -25,6 +25,37 @@ def usage(s=None):
     sys.exit(1)
 
 DEFAULT_DOMAIN="www.example.com"
+
+
+def normalize_domain(domain):
+    domain = domain.strip().rstrip('/')
+    try:
+        ipaddress.ip_address(domain)
+    except ValueError:
+        hostname = re.compile(
+            r'(?=^.{1,253}$)(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}'
+            r'[a-zA-Z0-9])?\.)*[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}'
+            r'[a-zA-Z0-9])?'
+        )
+        if not hostname.fullmatch(domain):
+            usage('domain must be a hostname or IP address')
+    return domain
+
+
+def password_hash(password):
+    result = subprocess.run(
+        [
+            'php', '-r',
+            'echo md5(hash("whirlpool", sha1(stream_get_contents(STDIN))));'
+        ],
+        input=password,
+        text=True,
+        capture_output=True,
+        check=True,
+    )
+    if not re.fullmatch(r'[0-9a-f]{32}', result.stdout):
+        raise RuntimeError('AVideo password hashing failed')
+    return result.stdout
 
 def main():
     try:
@@ -75,12 +106,23 @@ def main():
     if domain == "DEFAULT":
         domain = DEFAULT_DOMAIN
 
+    domain = normalize_domain(domain)
+
     inithooks_cache.write('APP_DOMAIN', domain)
 
     apache_conf = "/etc/apache2/sites-available/avideo.conf"
-    subprocess.run(["sed", "-i", "0,\|RewriteRule|! {\|RewriteRule|s|https://.*|https://%s/\$1 [R,L]|}" % domain, apache_conf])
-    subprocess.run(["sed", "-i", "\|RewriteCond|s|!^.*|!^%s$|" % domain, apache_conf])
-    hashpass = hashlib.md5(password.encode('utf8')).hexdigest()
+    url_host = '[{}]'.format(domain) if ':' in domain else domain
+    with open(apache_conf, 'r') as fob:
+        apache_data = fob.read()
+    apache_data = apache_data.replace(
+        'RewriteCond %{HTTP_HOST} !^localhost$',
+        'RewriteCond %{HTTP_HOST} !^{}$'.format(re.escape(url_host)))
+    apache_data = apache_data.replace(
+        'https://localhost/$1', 'https://{}/$1'.format(url_host))
+    with open(apache_conf, 'w') as fob:
+        fob.write(apache_data)
+
+    hashpass = password_hash(password)
 
     m = MySQL()
 
@@ -90,10 +132,8 @@ def main():
 
     """Set password details in AVideo-Encoder Database (Clear and Encrypted)"""
     m.execute('UPDATE avideo_encoder.streamers SET pass=%s WHERE id=1;', (password,))
-    m.execute('UPDATE avideo_encoder.streamers SET pass=%s WHERE id=2;', (hashpass,))
 
-    domain = domain + '/'
-    url = 'https://' + domain
+    url = 'https://' + url_host + '/'
     enc = url + 'encoder/'
 
     """Set Streamer Site Configuration in Encoder"""
@@ -125,9 +165,11 @@ def main():
             fob.writelines(lines)
 
     """Restart Apache"""
-    subprocess.run(['systemctl', 'restart', 'apache2.service'])
+    subprocess.run(['apache2ctl', '-t'], check=True)
+    subprocess.run(['systemctl', 'restart', 'apache2.service'], check=True)
     """Restart nginx"""
-    subprocess.run(['systemctl', 'restart', 'nginx.service'])
+    subprocess.run(['nginx', '-t'], check=True)
+    subprocess.run(['systemctl', 'restart', 'nginx.service'], check=True)
 
 if __name__ == "__main__":
     main()

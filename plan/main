@@ -4,20 +4,15 @@
 php-curl
 php-gd
 php-intl
+php-mbstring
 php-xml
-libapache2-mod-xsendfilel
+php-zip
+libapache2-mod-xsendfile
 ffmpeg
 libimage-exiftool-perl
-libjs-cropper
-libjs-jquery
-libjs-prototype
-libjs-scriptaculous
-libphp-phpmailer
-libphp-snoopy
-php-php-gettext
-libpcre3
 daemon
 nginx
 libnginx-mod-rtmp
+yt-dlp
 
 unzip
