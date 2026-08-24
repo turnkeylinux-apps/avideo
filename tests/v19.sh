@@ -79,8 +79,16 @@ curl --insecure --fail --silent --show-error \
     --data-urlencode "pass=$app_password" \
     --data-urlencode 'redirectUri=https://localhost/' \
     "$base/objects/login.json.php" >"$response"
-jq -e '.isLogged == true and .isAdmin == true and .canUpload == true' \
-    "$response" >/dev/null
+python3 - "$response" <<'PY'
+import json
+import sys
+
+with open(sys.argv[1], encoding='utf-8') as response_file:
+    response = json.load(response_file)
+assert response.get('isLogged') is True
+assert response.get('isAdmin') is True
+assert response.get('canUpload') is True
+PY
 
 read -r video_id clean_title filename video_status < <(
     mariadb --batch --skip-column-names --execute \
@@ -119,8 +127,16 @@ curl --insecure --fail --silent --show-error \
     --data-urlencode 'siteURL=https://localhost/' \
     --data-urlencode 'encodedPass=false' \
     "$base/encoder/objects/login.json.php" >"$response"
-jq -e '.isLogged == true and .isStreamerAdmin == true and .streamers_id == 1' \
-    "$response" >/dev/null
+python3 - "$response" <<'PY'
+import json
+import sys
+
+with open(sys.argv[1], encoding='utf-8') as response_file:
+    response = json.load(response_file)
+assert response.get('isLogged') is True
+assert response.get('isStreamerAdmin') is True
+assert response.get('streamers_id') == 1
+PY
 
 dpkg-query -W adminer webmin-apache webmin-mysql >/dev/null
 curl --insecure --fail --silent --show-error \
