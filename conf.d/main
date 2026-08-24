@@ -96,4 +96,3 @@ mkdir -p /HLS/{live,low}
 chown -R $USER:$USER /HLS
 
 apache2ctl -t
-nginx -t
