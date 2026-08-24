@@ -119,7 +119,8 @@ test "$streamer_url" = https://localhost/
 test "$allowed_url" = https://localhost/
 curl --insecure --fail --silent --show-error --location \
     "$base/encoder/" >"$page"
-grep -qi 'AVideo Encoder' "$page"
+grep -q 'id="loginForm"' "$page"
+grep -q 'id="siteURL"' "$page"
 curl --insecure --fail --silent --show-error \
     --cookie-jar "$encoder_cookie" --cookie "$encoder_cookie" \
     --data-urlencode 'user=admin' \
