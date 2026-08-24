@@ -116,7 +116,7 @@ def main():
         apache_data = fob.read()
     apache_data = apache_data.replace(
         'RewriteCond %{HTTP_HOST} !^localhost$',
-        'RewriteCond %{HTTP_HOST} !^{}$'.format(re.escape(url_host)))
+        'RewriteCond %{{HTTP_HOST}} !^{}$'.format(re.escape(url_host)))
     apache_data = apache_data.replace(
         'https://localhost/$1', 'https://{}/$1'.format(url_host))
     with open(apache_conf, 'w') as fob:
