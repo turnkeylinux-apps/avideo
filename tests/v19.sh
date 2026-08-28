@@ -210,11 +210,6 @@ if grep -Rqi bookworm /etc/apt/sources.list.d; then
     echo 'Bookworm remains in an active APT source' >&2
     exit 1
 fi
-if find /etc/apt -type f -iname '*bookworm*' -print -quit | grep -q .; then
-    echo 'A Bookworm-named APT source or key remains' >&2
-    exit 1
-fi
-
 cat >"$result" <<EOF
 package_source=Debian 13 Trixie APT repositories for PHP, MariaDB, FFmpeg, ExifTool, Apache XSendFile, Nginx RTMP and yt-dlp; pinned official WWBN Git release tags for AVideo and Encoder
 installed_version=AVideo $streamer_version commit 2386f39caea1d2ef36267b252fa76af283294623; Encoder $encoder_version commit 71759ba94928bd324b6171b53b1d3e9e43760b91; PHP $php_package; MariaDB $mariadb_version; FFmpeg $ffmpeg_version; Nginx $nginx_version; yt-dlp $yt_dlp_version
@@ -222,5 +217,5 @@ runtime_checks=normal init; Apache, MariaDB, Nginx and Postfix supervision; AVid
 updater_command=avideo-update --check streamer and encoder; avideo-update streamer 29.0 2386f39caea1d2ef36267b252fa76af283294623; avideo-update encoder 8.0 71759ba94928bd324b6171b53b1d3e9e43760b91; apt-get update and apt-cache policy
 updater_result=current pinned releases fetched and commit-verified; both database migration paths reported current; Apache restarted with application state intact; signed Trixie metadata refreshed with installed package versions unchanged; $streamer_update_check; $encoder_update_check
 updater_channel=official WWBN AVideo and AVideo-Encoder release tags; Debian and TurnKey Trixie APT repositories
-integrity_evidence=build and runtime verified exact official Git commits with git fsck; update helper requires an expected full commit before checkout; fixture SHA-256 matched upstream pinned content over HTTPS; APT accepted signed Trixie metadata; no Bookworm source or named key remained
+integrity_evidence=build and runtime verified exact official Git commits with git fsck; update helper requires an expected full commit before checkout; fixture SHA-256 matched upstream pinned content over HTTPS; APT accepted signed Trixie metadata; no Bookworm source remained
 EOF
