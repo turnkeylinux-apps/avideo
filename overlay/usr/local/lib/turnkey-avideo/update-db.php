@@ -17,6 +17,10 @@ if ($argv[1] === 'streamer') {
 }
 
 require "{$root}/videos/configuration.php";
+if (!is_object($config ?? null)) {
+    require_once "{$root}/objects/Configuration.php";
+    $config = new Configuration();
+}
 $currentVersion = $config->getVersion();
 $updates = [];
 
