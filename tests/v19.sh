@@ -11,8 +11,11 @@ page=/tmp/tkl-avideo-page.$$
 response=/tmp/tkl-avideo-response.$$
 media=/tmp/tkl-avideo-media.$$
 policy=/tmp/tkl-avideo-policy.$$
-encoder_verify_cache=$(php -r \
-    'echo sys_get_temp_dir(), "/", md5($argv[1]), "_verify.log";' "$base/")
+# Address the verifier cache inside Apache's PrivateTmp mount namespace.
+apache_pid=$(systemctl show --property MainPID --value apache2.service)
+encoder_verify_name=$(php -r \
+    'echo md5($argv[1]), "_verify.log";' "$base/")
+encoder_verify_cache=/proc/$apache_pid/root/tmp/$encoder_verify_name
 
 report_error() {
     printf 'test_failure line=%s status=%s command=%q\n' \
@@ -123,6 +126,7 @@ curl --insecure --fail --silent --show-error --location \
     "$base/encoder/" >"$page"
 grep -q 'id="loginForm"' "$page"
 grep -q 'id="siteURL"' "$page"
+install -o www-data -g www-data -m 600 /dev/null "$encoder_verify_cache"
 printf '%s\n' '{"verified":true}' >"$encoder_verify_cache"
 curl --insecure --fail --silent --show-error \
     --cookie-jar "$encoder_cookie" --cookie "$encoder_cookie" \
@@ -131,16 +135,27 @@ curl --insecure --fail --silent --show-error \
     --data-urlencode 'siteURL=https://localhost/' \
     --data-urlencode 'encodedPass=false' \
     "$base/encoder/objects/login.json.php" >"$response"
-python3 - "$response" <<'PY'
+if ! python3 - "$response" <<'PY'
 import json
 import sys
 
 with open(sys.argv[1], encoding='utf-8') as response_file:
     response = json.load(response_file)
+safe_fields = {
+    key: response.get(key)
+    for key in ('error', 'isLogged', 'isStreamerAdmin', 'streamers_id')
+}
+print('encoder_login=' + json.dumps(safe_fields, sort_keys=True),
+      file=sys.stderr)
 assert response.get('isLogged') is True
 assert response.get('isStreamerAdmin') is True
-assert response.get('streamers_id') == 1
+assert str(response.get('streamers_id')) == '1'
 PY
+then
+    grep -E 'login\.json: Login::run|Login::run request login|Login::run got an object|Login::run Error on Login context|Encoder Login Error|Verification (Start|GetFrom Cache|Response)|Error on Login not verified' \
+        /var/www/avideo-encoder/videos/avideo.log 2>/dev/null | tail -n 40 >&2 || true
+    exit 1
+fi
 
 dpkg-query -W adminer webmin-apache webmin-mysql >/dev/null
 curl --insecure --fail --silent --show-error \
