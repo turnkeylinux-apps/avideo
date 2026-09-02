@@ -2,6 +2,8 @@ turnkey-avideo-19.0 (1) turnkey; urgency=low
 
   * Upgrade the base distribution to Debian 13/Trixie.
 
+  * Wait for MariaDB before regenerating first-boot application secrets.
+
   * Install AVideo 29.0 and AVideo Encoder 8.0 from their pinned official
     upstream release tags.
 
