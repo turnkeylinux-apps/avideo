@@ -122,6 +122,17 @@ allowed_url=$(mariadb --batch --skip-column-names --execute \
 test "$encoder_url" = https://localhost/encoder/
 test "$streamer_url" = https://localhost/
 test "$allowed_url" = https://localhost/
+for document_root in /var/www/avideo /var/www/avideo/; do
+    root_contract=$(php -r '
+        $_SERVER["DOCUMENT_ROOT"] = $argv[1];
+        $_SERVER["SERVER_NAME"] = "assigned.example.tklapp.com";
+        $_SERVER["HTTPS"] = "on";
+        require "/var/www/avideo/videos/configuration.php";
+        printf("%s|%s", $global["webSiteRootURL"],
+            $global["webSiteRootPath"]);
+    ' "$document_root")
+    test "$root_contract" = 'https://assigned.example.tklapp.com/|/'
+done
 curl --insecure --fail --silent --show-error --location \
     "$base/encoder/" >"$page"
 grep -q 'id="loginForm"' "$page"
@@ -213,7 +224,7 @@ fi
 cat >"$result" <<EOF
 package_source=Debian 13 Trixie APT repositories for PHP, MariaDB, FFmpeg, ExifTool, Apache XSendFile, Nginx RTMP and yt-dlp; pinned official WWBN Git release tags for AVideo and Encoder
 installed_version=AVideo $streamer_version commit 2386f39caea1d2ef36267b252fa76af283294623; Encoder $encoder_version commit 71759ba94928bd324b6171b53b1d3e9e43760b91; PHP $php_package; MariaDB $mariadb_version; FFmpeg $ffmpeg_version; Nginx $nginx_version; yt-dlp $yt_dlp_version
-runtime_checks=normal init; Apache, MariaDB, Nginx and Postfix supervision; AVideo HTTPS web; administrator JSON login; deterministic fixture database record, player page and byte-identical playback; Encoder URL and database linkage; Encoder login through Streamer; RTMP listener; Adminer and Webmin HTTPS
+runtime_checks=normal init; Apache, MariaDB, Nginx and Postfix supervision; AVideo HTTPS web; assigned-FQDN root derivation with both Apache DOCUMENT_ROOT forms; administrator JSON login; deterministic fixture database record, player page and byte-identical playback; Encoder URL and database linkage; Encoder login through Streamer; RTMP listener; Adminer and Webmin HTTPS
 updater_command=avideo-update --check streamer and encoder; avideo-update streamer 29.0 2386f39caea1d2ef36267b252fa76af283294623; avideo-update encoder 8.0 71759ba94928bd324b6171b53b1d3e9e43760b91; apt-get update and apt-cache policy
 updater_result=current pinned releases fetched and commit-verified; both database migration paths reported current; Apache restarted with application state intact; signed Trixie metadata refreshed with installed package versions unchanged; $streamer_update_check; $encoder_update_check
 updater_channel=official WWBN AVideo and AVideo-Encoder release tags; Debian and TurnKey Trixie APT repositories

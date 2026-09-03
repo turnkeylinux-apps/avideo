@@ -64,4 +64,30 @@ if (empty($obj->success) || !empty($obj->error)) {
     exit(1);
 }
 
+if ($component === 'streamer') {
+    $configurationPath = "{$root}videos/configuration.php";
+    $configuration = file_get_contents($configurationPath);
+    $subDirAssignment = <<<'PHP'
+    $subDir = str_replace(array($_SERVER["DOCUMENT_ROOT"], 'videos/configuration.php'), array('',''), $file);
+PHP;
+    $subDirNormalization = "    \$subDir = '/' . ltrim(\$subDir, '/');";
+
+    if ($configuration === false ||
+            substr_count($configuration, $subDirAssignment) !== 1) {
+        fwrite(STDERR, "Unable to locate AVideo root path assignment\n");
+        exit(1);
+    }
+    $configuration = str_replace(
+        $subDirAssignment,
+        $subDirAssignment . PHP_EOL . $subDirNormalization,
+        $configuration,
+        $replacements
+    );
+    if ($replacements !== 1 ||
+            file_put_contents($configurationPath, $configuration) === false) {
+        fwrite(STDERR, "Unable to normalize AVideo root path\n");
+        exit(1);
+    }
+}
+
 fwrite(STDOUT, "installed_component={$component}\n");
